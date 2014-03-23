@@ -1,0 +1,8 @@
+.navpath li.footer.center {
+  float: none;
+  text-align: center;
+}
+
+.groupheader {
+  display: none;
+}
