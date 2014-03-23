@@ -41,198 +41,198 @@
  */
 class Weirdo {
 
-  /** See http://php.net/debug_backtrace for semantics. */
+	/** See http://php.net/debug_backtrace for semantics. */
 	const DEBUG_BACKTRACE_PROVIDE_OBJECT = 0x0001;
 
-  /** See http://php.net/debug_backtrace for semantics. */
+	/** See http://php.net/debug_backtrace for semantics. */
 	const DEBUG_BACKTRACE_IGNORE_ARGS    = 0x0002;
-  
-  /** See http://php.net/reserved.constants for semantics. */
-  public static $K = array(
-    'PHP_VERSION_ID'    => null,
-    'E_USER_ERROR'      => 0x0100,
-    'E_USER_WARNING'    => 0x0200,
-    'E_USER_NOTICE'     => 0x0400,
-    'E_USER_DEPRECATED' => 0x4000,
-  );
-  
-  public static $userErrorTypeText = array(
-    0x0100 => 'Fatal error',
-  );
-  
+
+	/** See http://php.net/reserved.constants for semantics. */
+	public static $K = array(
+		'PHP_VERSION_ID'    => null,
+		'E_USER_ERROR'      => 0x0100,
+		'E_USER_WARNING'    => 0x0200,
+		'E_USER_NOTICE'     => 0x0400,
+		'E_USER_DEPRECATED' => 0x4000,
+	);
+
+	public static $userErrorTypeText = array(
+		0x0100 => 'Fatal error',
+	);
+
 	public function __construct() {
-    if ( self::$_self || !self::$_singleton ) {
-      throw new ErrorException( 'Invalid attempt to instantiate static/singleton ' . __CLASS__ . ' class' );
-    }
+		if ( self::$_self || !self::$_singleton ) {
+			throw new ErrorException( 'Invalid attempt to instantiate static/singleton ' . __CLASS__ . ' class' );
+		}
 	}
-  
-  public static function singleton() {
-    if ( !self::$_self ) {
-      self::$_singleton = true;
-      self::$_self = new self();
-    }
-    return self::$_self;
-  }
-  
-  public static function wordsFromIdName( $idName ) {
-    // replace underscores with spaces and reduce multiple spaces 
-    $words = preg_replace('/([ _]+)/', ' ', $idName );
-    // if the name had no lower case letters, make all but the first character lower case
-    if ( strtoupper($words) === $words ) {
-      $words = ucfirst( strtolower( $words ) );
-    }
-    $words = trim( $words );
-    return $words;
-  }
-  
-  public static function logCallerError( $error_msg, $error_type = E_USER_NOTICE, $callerDepth = 0, $msg_format = null ) {
-    if ( is_int( $error_type ) ) {
-      $intErrorType = $error_type;
-    } else {
-      $re = '/^((0x[0-9a-f]+)|-?0*([0-9]+(\.[0-9]*)?))$/i';
-      if ( preg_match( $re, $error_type ) ) {
-        $intErrorType = preg_replace( $re, '$2$3', $error_type );
-      } else {
-        self::trigger_error( 'A non well formed numeric value encountered', E_USER_NOTICE, 1 );
-        $intErrorType = intval( $error_type, 0 );
-      }
-    }
-    if ( isset( self::$userErrorTypeText[ $intErrorType ] ) ) {
-      $typeText = self::$userErrorTypeText[ $intErrorType ];
-      if ( !( error_reporting() & $intErrorType ) ) {
-        return true;
-      }
-    } else {
-      $typeText = 'UNKNOWN_ERROR_TYPE';
-    }
-    
-    $callerFrame = self::getCallStackFrame( $callerDepth + 1 );
-    if ( !$callerFrame ) {
-      self::logCallerError( 'Invalid caller depth when invoking ' . __METHOD__ . '; returning our caller\'s frame', E_USER_WARNING );
-      $callerFrame = self::getCallStackFrame(0);
-    }
-    
-    if ( $msg_format === null ) {
-      $msg_format = 'PHP %s:  %s';
-    }
-    error_log(
-      sprintf("$msg_format in %s on line %u",
-        $typeText,
-        $error_msg,
-        $callerFrame['file'],
-        $callerFrame['line']
-      ),
-      0
-    );
-    return true;
-  }
-  
+
+	public static function singleton() {
+		if ( !self::$_self ) {
+			self::$_singleton = true;
+			self::$_self = new self();
+		}
+		return self::$_self;
+	}
+
+	public static function wordsFromIdName( $idName ) {
+		// replace underscores with spaces and reduce multiple spaces
+		$words = preg_replace( '/([ _]+)/', ' ', $idName );
+		// if the name had no lower case letters, make all but the first character lower case
+		if ( strtoupper( $words ) === $words ) {
+			$words = ucfirst( strtolower( $words ) );
+		}
+		$words = trim( $words );
+		return $words;
+	}
+
+	public static function logCallerError( $error_msg, $error_type = E_USER_NOTICE, $callerDepth = 0, $msg_format = null ) {
+		if ( is_int( $error_type ) ) {
+			$intErrorType = $error_type;
+		} else {
+			$re = '/^((0x[0-9a-f]+)|-?0*([0-9]+(\.[0-9]*)?))$/i';
+			if ( preg_match( $re, $error_type ) ) {
+				$intErrorType = preg_replace( $re, '$2$3', $error_type );
+			} else {
+				self::trigger_error( 'A non well formed numeric value encountered', E_USER_NOTICE, 1 );
+				$intErrorType = intval( $error_type, 0 );
+			}
+		}
+		if ( isset( self::$userErrorTypeText[ $intErrorType ] ) ) {
+			$typeText = self::$userErrorTypeText[ $intErrorType ];
+			if ( !( error_reporting() & $intErrorType ) ) {
+				return true;
+			}
+		} else {
+			$typeText = 'UNKNOWN_ERROR_TYPE';
+		}
+
+		$callerFrame = self::getCallStackFrame( $callerDepth + 1 );
+		if ( !$callerFrame ) {
+			self::logCallerError( 'Invalid caller depth when invoking ' . __METHOD__ . '; returning our caller\'s frame', E_USER_WARNING );
+			$callerFrame = self::getCallStackFrame( 0 );
+		}
+
+		if ( $msg_format === null ) {
+			$msg_format = 'PHP %s:  %s';
+		}
+		error_log(
+			sprintf( "$msg_format in %s on line %u",
+				$typeText,
+				$error_msg,
+				$callerFrame['file'],
+				$callerFrame['line']
+			),
+			0
+		);
+		return true;
+	}
+
 	public static function debugBacktrace( $options, $limit = 0, $start = 0 ) {
-    // if given a Boolean, convert it to an int
-    if ( is_bool( $options ) ) {
-      $options = ((int)$options);
-    }
-    
-    // if debug_backtrace supports the $limit parameter, pass it along
+		// if given a Boolean, convert it to an int
+		if ( is_bool( $options ) ) {
+			$options = ( (int)$options );
+		}
+
+		// if debug_backtrace supports the $limit parameter, pass it along
 		if ( self::$_backtraceHasLimit ) {
 			$stack = debug_backtrace( $options, $limit ? ( $limit + 1 ) : 0 );
 		} else {
-      if ( self::$K['PHP_VERSION_ID'] >= 50306 ) {
-        $stack = debug_backtrace( $options );
-        $options &= ~self::DEBUG_BACKTRACE_IGNORE_ARGS;
-      } else {
-        $stack = debug_backtrace( (bool)( $options & self::DEBUG_BACKTRACE_PROVIDE_OBJECT ) );
-      }
+			if ( self::$K['PHP_VERSION_ID'] >= 50306 ) {
+				$stack = debug_backtrace( $options );
+				$options &= ~self::DEBUG_BACKTRACE_IGNORE_ARGS;
+			} else {
+				$stack = debug_backtrace( (bool)( $options & self::DEBUG_BACKTRACE_PROVIDE_OBJECT ) );
+			}
 		}
-    // remove requested number of stack frames, but not ALL of them!
-    if ( $start >= 0 ) {
-      array_splice( $stack, 0, $start + 1 );
-    }
+		// remove requested number of stack frames, but not ALL of them!
+		if ( $start >= 0 ) {
+			array_splice( $stack, 0, $start + 1 );
+		}
 
-    // limit the stack size if this version of PHP didn't already do that for us
-    if ( $limit && ( $limit < count( $stack ) ) ) {
-      array_splice( $stack, $limit );
-    } 
-    
-    // Did the caller request his own calling frame?
-    if ( $start < 0 ) {
-      // remove junk from the frame 
-      unset( $stack[0]['function'] );
-      unset( $stack[0]['class'] );
-      unset( $stack[0]['type'] );
-      // reindex starting at -1
-      $stack = array( -1 => $stack[0] ) + array_slice( $stack, 1 );
-    }
-    
-    // strip out the args if this version of PHP didn't already do that for us
-    if ( $options & self::DEBUG_BACKTRACE_IGNORE_ARGS ) {
-      foreach ( $stack as &$frame ) {
-        unset( $frame['args'] );
-      }
-    }
- 
+		// limit the stack size if this version of PHP didn't already do that for us
+		if ( $limit && ( $limit < count( $stack ) ) ) {
+			array_splice( $stack, $limit );
+		}
+
+		// Did the caller request his own calling frame?
+		if ( $start < 0 ) {
+			// remove junk from the frame
+			unset( $stack[0]['function'] );
+			unset( $stack[0]['class'] );
+			unset( $stack[0]['type'] );
+			// reindex starting at -1
+			$stack = array( -1 => $stack[0] ) + array_slice( $stack, 1 );
+		}
+
+		// strip out the args if this version of PHP didn't already do that for us
+		if ( $options & self::DEBUG_BACKTRACE_IGNORE_ARGS ) {
+			foreach ( $stack as &$frame ) {
+				unset( $frame['args'] );
+			}
+		}
+
 		return $stack;
 	}
-	
+
 	public static function getCallStackFrame( $depth = 0, $options = null ) {
-    if ( $options === null ) {
-      $options = self::DEBUG_BACKTRACE_PROVIDE_OBJECT;
-    }
+		if ( $options === null ) {
+			$options = self::DEBUG_BACKTRACE_PROVIDE_OBJECT;
+		}
 
-    $frame = array_pop( self::debugBacktrace( $options, 1, max( -1, $depth ) + 1 ) );
+		$frame = array_pop( self::debugBacktrace( $options, 1, max( -1, $depth ) + 1 ) );
 
-    // remove junk from the frame 
-    unset( $frame['function'] );
-    unset( $frame['class'] );
-    unset( $frame['type'] );
- 
-    return $frame;
+		// remove junk from the frame
+		unset( $frame['function'] );
+		unset( $frame['class'] );
+		unset( $frame['type'] );
+
+		return $frame;
 	}
-  
+
 	public static function _initStatic() {
 		if ( !isset( self::$_self ) ) {
-      if ( defined( 'PHP_VERSION_ID' ) ) {
-        self::$K['PHP_VERSION_ID'] = PHP_VERSION_ID;
-      } else {
-        self::$K['PHP_VERSION_ID'] = (int) vsprintf( '%u%02u%02u', explode( '.', phpversion() ) );
-      }
-      if ( self::$K['PHP_VERSION_ID'] < 40400 ) {
-        trigger_error( 'The ' . __CLASS__ . ' class is not supported for PHP verions earlier than PHP 4.4.', E_USER_WARNING );
-      }
-      
-      self::$_backtraceHasLimit = ( self::$K['PHP_VERSION_ID'] >= 50400 );
-      
-      $coreConstants = get_defined_constants( true );
-      $coreConstants = $coreConstants['Core'];
-      $userErrorTypes = array();
-      foreach ( $coreConstants as $k => $v ) {
-        if( substr( $k, 0, 7 ) === 'E_USER_' ) {
-          $userErrorTypes[$k] = $v;
-        }
-      }
-      unset( $coreConstants );
-      self::$K += $userErrorTypes;
-      
-      foreach ( $userErrorTypes as $k => $v ) {
-        if ( !isset( self::$userErrorTypeText[$v] ) ) {
-          self::$userErrorTypeText[$v] = self::wordsFromIdName( substr( $k, 7 ) );
-        }
-      }
+			if ( defined( 'PHP_VERSION_ID' ) ) {
+				self::$K['PHP_VERSION_ID'] = PHP_VERSION_ID;
+			} else {
+				self::$K['PHP_VERSION_ID'] = (int) vsprintf( '%u%02u%02u', explode( '.', phpversion() ) );
+			}
+			if ( self::$K['PHP_VERSION_ID'] < 40400 ) {
+				trigger_error( 'The ' . __CLASS__ . ' class is not supported for PHP verions earlier than PHP 4.4.', E_USER_WARNING );
+			}
+
+			self::$_backtraceHasLimit = ( self::$K['PHP_VERSION_ID'] >= 50400 );
+
+			$coreConstants = get_defined_constants( true );
+			$coreConstants = $coreConstants['Core'];
+			$userErrorTypes = array();
+			foreach ( $coreConstants as $k => $v ) {
+				if( substr( $k, 0, 7 ) === 'E_USER_' ) {
+					$userErrorTypes[$k] = $v;
+				}
+			}
+			unset( $coreConstants );
+			self::$K += $userErrorTypes;
+
+			foreach ( $userErrorTypes as $k => $v ) {
+				if ( !isset( self::$userErrorTypeText[$v] ) ) {
+					self::$userErrorTypeText[$v] = self::wordsFromIdName( substr( $k, 7 ) );
+				}
+			}
 
 		} else {
 			throw new ErrorException( __METHOD__ . ' is not callable' );
 		}
 	}
- 
-  /** */
+
+	/** */
 	private static $_backtraceHasLimit;
- 
+
 	/** Reference to singleton instance. */
 	public static $_self;
-	 
+
 	/** Flag set when singleton() invoked. */
 	public static $_singleton;
-	 
+
 }
 // Once-only invocation to initialize static properties
 Weirdo::_initStatic();
