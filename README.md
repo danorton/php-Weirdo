@@ -2,7 +2,7 @@
 ========
 © 2014 Daniel Norton d/b/a WeirdoSoft - www.weirdosoft.com
 
-This module provides the Weird PHP class and replaces "missing" PHP functions.
+This module provides the Weirdo PHP class and replaces "missing" PHP functions.
 
 ## Documentation
 The latest API documentation is at http://danorton.github.io/Weirdo/dox/
