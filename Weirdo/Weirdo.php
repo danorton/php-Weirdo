@@ -36,7 +36,7 @@
 /**
  * This class provides various utility functions.
  *
- * It can be used either statically or via its singleton, Weirdo::$self.
+ * It can be used either statically or via its singleton.
  *
  */
 class Weirdo {
@@ -60,12 +60,22 @@ class Weirdo {
 		0x0100 => 'Fatal error',
 	);
 
+	/**
+	 * Constructor for class's singleton object.
+	 *
+	 * Throws ErrorException if singleton already created.
+	 */
 	public function __construct() {
 		if ( self::$_self || !self::$_singleton ) {
 			throw new ErrorException( 'Invalid attempt to instantiate static/singleton ' . __CLASS__ . ' class' );
 		}
 	}
 
+	/**
+	 * Get class's singleton object.
+	 *
+	 * @returns     Weirdo instance.
+	 */
 	public static function singleton() {
 		if ( !self::$_self ) {
 			self::$_singleton = true;
@@ -74,6 +84,7 @@ class Weirdo {
 		return self::$_self;
 	}
 
+	/** */
 	public static function wordsFromIdName( $idName ) {
 		// replace underscores with spaces and reduce multiple spaces
 		$words = preg_replace( '/([ _]+)/', ' ', $idName );
@@ -85,6 +96,7 @@ class Weirdo {
 		return $words;
 	}
 
+	/** */
 	public static function logCallerError( $error_msg, $error_type = E_USER_NOTICE, $callerDepth = 0, $msg_format = null ) {
 		if ( is_int( $error_type ) ) {
 			$intErrorType = $error_type;
@@ -127,6 +139,7 @@ class Weirdo {
 		return true;
 	}
 
+	/** */
 	public static function debugBacktrace( $options, $limit = 0, $start = 0 ) {
 		// if given a Boolean, convert it to an int
 		if ( is_bool( $options ) ) {
@@ -174,6 +187,7 @@ class Weirdo {
 		return $stack;
 	}
 
+	/** */
 	public static function getCallStackFrame( $depth = 0, $options = null ) {
 		if ( $options === null ) {
 			$options = self::DEBUG_BACKTRACE_PROVIDE_OBJECT;
@@ -189,6 +203,16 @@ class Weirdo {
 		return $frame;
 	}
 
+	/**
+	 * Initialize this class's static properties.
+	 * @private
+	 *
+	 * PHP only allows variable declarations with simple constants, so we have this
+	 * function for more complex initialization of statics. Although "public" in
+	 * construction, it is usable in this source file, only, immediately after this
+	 * class is declared. Any attempt to invoke this method a second time will throw
+	 * a WMException.
+	 */
 	public static function _initStatic() {
 		if ( !isset( self::$_self ) ) {
 			if ( defined( 'PHP_VERSION_ID' ) ) {
