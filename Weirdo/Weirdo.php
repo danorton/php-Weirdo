@@ -202,6 +202,23 @@ class Weirdo {
 
 		return $frame;
 	}
+ 
+  /** Recursively convert an array to an object */
+  public static function objectFromArray( $array ) {
+    $o = (object) null;
+    foreach ( $array as $k => $v ) {
+      // replace null array key with a valid object field name
+      if ( $k === '' ) {
+        $k = '_null_' . __FUNCTION__;
+      }
+      if ( is_array( $v ) ) {
+        $o->{$k} = self::objectFromArray( $v ); // recurse on arrays
+      } else {
+        $o->{$k} = $v;
+      }
+    }
+    return $o;
+  }
 
 	/**
 	 * Initialize this class's static properties.
