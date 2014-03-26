@@ -29,10 +29,8 @@ require_once __DIR__ . "/Weirdo.php";
 /**
  * This class provides getter and setter functions
  *
- * It can be used either statically or via its singleton, WeirdoGetterSetter::$self.
- *
  */
-class WeirdoGetterSetter {
+abstract class WeirdoGetterSetter extends Weirdo {
 
 	/** Output an undefined message to the log. */
 	private function _triggerUndefinedPropertyNotice( $name = null ) {
