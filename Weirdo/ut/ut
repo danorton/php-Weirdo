@@ -1,0 +1,292 @@
+#!/usr/bin/php
+<?php
+/**
+ * @addtogroup Weirdo
+ *
+ * @file
+ * @{
+ * @copyright
+ *   © 2014 Daniel Norton d/b/a WeirdoSoft - www.weirdosoft.com
+ *
+ * @section License
+ * **GPL v3**\n
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * \n\n
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * \n\n
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @}
+ */
+
+$GLOBALS['bugbug'] = 0;
+//$GLOBALS['bugbug'] = 1;
+require_once __DIR__ . "/../WeirdoCommandLineApp.php";
+require_once __DIR__ . "/../WeirdoUrl.php";
+
+class WeidoUrl_ut extends WeirdoCommandLineApp {
+
+  public $parseTestSet = array(
+    'google'     => array(
+			 'url' => 'http://www.google.com',
+       'parsed' => array( 'scheme' => 'http', 'host' => 'www.google.com', ),
+    ),
+    'abspath'    => array(
+			 'url' => '/path1/path2',
+       'parsed' => array( 'path' => '/path1/path2', ),
+		),
+    'noscheme'   => array(
+			 'url' => '//example.com/path1/path2',
+       'parsed' => array( 'host' => 'example.com', 'path' => '/path1/path2', ),
+		),
+    'dot1'       => array(
+			 'url' => '.',
+       'parsed' => array( 'path' => '.', ),
+		),
+    'dotdot2'    => array(
+			 'url' => 'a/../../..',
+       'parsed' => array( 'path' => '../..', ),
+		),
+    'absdotdot3' => array(
+			 'url' => '/a/../../..',
+       'parsed' => array( 'path' => '/', ),
+		),
+    'merge_base'   => array(
+			 'url' => 'http://a/b/c/d;p?q',
+       'parsed' => array( 'scheme' => 'http', 'host' => 'a', 'path' => '/b/c/d;p', 'query=q' ),
+		),
+  );
+
+  public $mergeTestSet = array(
+    array(
+			'refUrl' => "g:h",
+			'expectUrl' => "g:h",
+		),
+		array(
+			'refUrl' => "g",
+			'expectUrl' => "http://a/b/c/g",
+		),
+		array(
+			'refUrl' => "./g",
+			'expectUrl' => "http://a/b/c/g",
+		),
+		array(
+			'refUrl' => "g/",
+			'expectUrl' => "http://a/b/c/g/",
+		),
+		array(
+			'refUrl' => "/g",
+			'expectUrl' => "http://a/g",
+		),
+		array(
+			'refUrl' => "//g",
+			'expectUrl' => "http://g",
+		),
+		array(
+			'refUrl' => "?y",
+			'expectUrl' => "http://a/b/c/d;p?y",
+		),
+		array(
+			'refUrl' => "g?y",
+			'expectUrl' => "http://a/b/c/g?y",
+		),
+		array(
+			'refUrl' => "#s",
+			'expectUrl' => "http://a/b/c/d;p?q#s",
+		),
+		array(
+			'refUrl' => "g#s",
+			'expectUrl' => "http://a/b/c/g#s",
+		),
+		array(
+			'refUrl' => "g?y#s",
+			'expectUrl' => "http://a/b/c/g?y#s",
+		),
+		array(
+			'refUrl' => ";x",
+			'expectUrl' => "http://a/b/c/;x",
+		),
+		array(
+			'refUrl' => "g;x",
+			'expectUrl' => "http://a/b/c/g;x",
+		),
+		array(
+			'refUrl' => "g;x?y#s",
+			'expectUrl' => "http://a/b/c/g;x?y#s",
+		),
+		array(
+			'refUrl' => "",
+			'expectUrl' => "http://a/b/c/d;p?q",
+		),
+		array(
+			'refUrl' => ".",
+			'expectUrl' => "http://a/b/c/",
+		),
+		array(
+			'refUrl' => "./N/..",
+			'expectUrl' => "http://a/b/c/",
+		),
+		array(
+			'refUrl' => "./",
+			'expectUrl' => "http://a/b/c/",
+		),
+		array(
+			'refUrl' => "./..",
+			'expectUrl' => "http://a/b/",
+		),
+		array(
+			'refUrl' => "..",
+			'expectUrl' => "http://a/b/",
+		),
+		array(
+			'refUrl' => "../",
+			'expectUrl' => "http://a/b/",
+		),
+		array(
+			'refUrl' => "../g",
+			'expectUrl' => "http://a/b/g",
+		),
+		array(
+			'refUrl' => "../..",
+			'expectUrl' => "http://a/",
+		),
+		array(
+			'refUrl' => "../../",
+			'expectUrl' => "http://a/",
+		),
+		array(
+			'refUrl' => "../../g",
+			'expectUrl' => "http://a/g",
+		),
+		array(
+			'refUrl' => "/./g",
+			'expectUrl' => "http://a/g",
+		),
+		array(
+			'refUrl' => "/../g",
+			'expectUrl' => "http://a/g",
+		),
+		array(
+			'refUrl' => "g.",
+			'expectUrl' => "http://a/b/c/g.",
+		),
+		array(
+			'refUrl' => ".g",
+			'expectUrl' => "http://a/b/c/.g",
+		),
+		array(
+			'refUrl' => "g..",
+			'expectUrl' => "http://a/b/c/g..",
+		),
+		array(
+			'refUrl' => "..g",
+			'expectUrl' => "http://a/b/c/..g",
+		),
+		array(
+			'refUrl' => "./../g",
+			'expectUrl' => "http://a/b/g",
+		),
+		array(
+			'refUrl' => "./g/.",
+			'expectUrl' => "http://a/b/c/g/",
+		),
+		array(
+			'refUrl' => "g/./h",
+			'expectUrl' => "http://a/b/c/g/h",
+		),
+		array(
+			'refUrl' => "g/../h",
+			'expectUrl' => "http://a/b/c/h",
+		),
+		array(
+			'refUrl' => "g;x=1/./y",
+			'expectUrl' => "http://a/b/c/g;x=1/y",
+		),
+		array(
+			'refUrl' => "g;x=1/../y",
+			'expectUrl' => "http://a/b/c/y",
+		),
+		array(
+			'refUrl' => "g?y/./x",
+			'expectUrl' => "http://a/b/c/g?y/./x",
+		),
+		array(
+			'refUrl' => "g?y/../x",
+			'expectUrl' => "http://a/b/c/g?y/../x",
+		),
+		array(
+			'refUrl' => "g#s/./x",
+			'expectUrl' => "http://a/b/c/g#s/./x",
+		),
+		array(
+			'refUrl' => "g#s/../x",
+			'expectUrl' => "http://a/b/c/g#s/../x",
+		),
+		array( // for backward compatibility
+      'strict' => false,
+			'refUrl' => "http:g",
+			'expectUrl' => "http://a/b/c/g",
+    ),
+		array( // for strict parsers
+      'strict' => true,
+			'refUrl' => "http:g",
+			'expectUrl' => "http:g",
+    ),
+  );
+
+  protected function _run( $args, $env ) {
+
+    foreach ( $this->parseTestSet as $name => &$item ) {
+      $urlParts = WeirdoUrl::parse( $item['url'] );
+      // bugbug - compare $urlParts against 'parsed'
+      $urlRebuilt = WeirdoUrl::urlFromParts( $urlParts );
+      $this->parseTestSet[$name]['parsed'] = $urlParts;
+      if (0&& $urlRebuilt !== $item['url'] ) {
+        printf("===\n");
+        printf("name: %s\n", $name );
+        printf(" orig: \"%s\"\n", $item['url']);
+        printf("built: \"%s\"\n", $urlRebuilt);
+        0&&var_dump( $urlParts );
+      }
+    }
+
+
+    0 && var_dump(
+      WeirdoUrl::mergeUrlsFromParts(
+        $this->parseTestSet['abspath']['url'],
+        $this->parseTestSet['abspath']['parsed'],
+        $this->parseTestSet['google']['parsed']
+      )
+    );
+
+
+    echo "===========================\n";
+    printf("merge_base=\n  %s\n", $this->parseTestSet['merge_base']['url']);
+
+    foreach( $this->mergeTestSet as $t ) {
+      if ( isset( $t['strict'] ) && $t['strict'] ) {
+        continue;
+      }
+      $f = WeirdoUrl::mergeUrlsFromParts(
+          WeirdoUrl::parse($t['refUrl']),
+          $this->parseTestSet['merge_base']['parsed']
+        );
+      $m = WeirdoUrl::urlFromParts( $f );
+      printf("%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::urlFromParts( $f ) . '"', "\"{$t['expectUrl']}\"" );
+    }
+  }
+ 
+}
+// Once-only static initialization
+//WeidoUrl_ut::_initStatic();
+
+exit ( WeidoUrl_ut::run( $argv, $_ENV ) );
+
+/** @}*/
+
