@@ -32,40 +32,40 @@ require_once __DIR__ . "/../WeirdoUrl.php";
 
 class WeidoUrl_ut extends WeirdoCommandLineApp {
 
-  public $parseTestSet = array(
-    'google'     => array(
+	public $parseTestSet = array(
+		'google'     => array(
 			 'url' => 'http://www.google.com',
-       'parsed' => array( 'scheme' => 'http', 'host' => 'www.google.com', ),
-    ),
-    'abspath'    => array(
+			 'parsed' => array( 'scheme' => 'http', 'host' => 'www.google.com', ),
+		),
+		'abspath'    => array(
 			 'url' => '/path1/path2',
-       'parsed' => array( 'path' => '/path1/path2', ),
+			 'parsed' => array( 'path' => '/path1/path2', ),
 		),
-    'noscheme'   => array(
+		'noscheme'   => array(
 			 'url' => '//example.com/path1/path2',
-       'parsed' => array( 'host' => 'example.com', 'path' => '/path1/path2', ),
+			 'parsed' => array( 'host' => 'example.com', 'path' => '/path1/path2', ),
 		),
-    'dot1'       => array(
+		'dot1'       => array(
 			 'url' => '.',
-       'parsed' => array( 'path' => '.', ),
+			 'parsed' => array( 'path' => '.', ),
 		),
-    'dotdot2'    => array(
+		'dotdot2'    => array(
 			 'url' => 'a/../../..',
-       'parsed' => array( 'path' => '../..', ),
+			 'parsed' => array( 'path' => '../..', ),
 		),
-    'absdotdot3' => array(
+		'absdotdot3' => array(
 			 'url' => '/a/../../..',
-       'parsed' => array( 'path' => '/', ),
+			 'parsed' => array( 'path' => '/', ),
 		),
-    'merge_base'   => array(
+		'merge_base'   => array(
 			 'url' => 'http://a/b/c/d;p?q',
-       'parsed' => array( 'scheme' => 'http', 'host' => 'a', 'path' => '/b/c/d;p', 'query=q' ),
+			 'parsed' => array( 'scheme' => 'http', 'host' => 'a', 'path' => '/b/c/d;p', 'query=q' ),
 		),
-  );
+	);
 
-  public $mergeTestSet = array(
+	public $mergeTestSet = array(
 //*///
-    array(
+		array(
 			'refUrl' => "g:h",
 			'expectUrl' => "g:h",
 		),
@@ -232,50 +232,49 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 			'expectUrl' => "http://a/b/c/g#s/../x",
 		),
 		array( // for backward compatibility
-      'strict' => false,
+			'strict' => false,
 			'refUrl' => "http:g",
 			'expectUrl' => "http://a/b/c/g",
-    ),
+		),
 		array( // for strict parsers
-      'strict' => true,
+			'strict' => true,
 			'refUrl' => "http:g",
 			'expectUrl' => "http:g",
-    ),
+		),
 //*///
-  );
+	);
 
-  protected function _run( $args, $env ) {
+	protected function _run( $args, $env ) {
 
-    foreach ( $this->parseTestSet as $name => &$item ) {
-      $urlParts = WeirdoUrl::parse( $item['url'] );
-      // bugbug - compare $urlParts against 'parsed'
-      $urlRebuilt = WeirdoUrl::unparse( $urlParts );
-      $this->parseTestSet[$name]['parsed'] = $urlParts;
-      if (0&& $urlRebuilt !== $item['url'] ) {
-        printf("===\n");
-        printf("name: %s\n", $name );
-        printf(" orig: \"%s\"\n", $item['url']);
-        printf("built: \"%s\"\n", $urlRebuilt);
-        0&&var_dump( $urlParts );
-      }
-    }
+		foreach ( $this->parseTestSet as $name => &$item ) {
+			$urlParts = WeirdoUrl::parse( $item['url'] );
+			// bugbug - compare $urlParts against 'parsed'
+			$urlRebuilt = WeirdoUrl::unparse( $urlParts );
+			$this->parseTestSet[$name]['parsed'] = $urlParts;
+			if (0&& $urlRebuilt !== $item['url'] ) {
+				printf( "===\n" );
+				printf( "name: %s\n", $name );
+				printf( " orig: \"%s\"\n", $item['url'] );
+				printf( "built: \"%s\"\n", $urlRebuilt );
+				0&&var_dump( $urlParts );
+			}
+		}
 
-    echo "===========================\n";
-    printf("merge_base=\n  %s\n", $this->parseTestSet['merge_base']['url']);
+		echo "===========================\n";
+		printf( "merge_base=\n  %s\n", $this->parseTestSet['merge_base']['url'] );
 
-    foreach( $this->mergeTestSet as $t ) {
-      if ( isset( $t['strict'] ) && $t['strict'] ) {
-        continue;
-      }
-      $f = WeirdoUrl::mergeUrls(
-          WeirdoUrl::parse($t['refUrl']),
-          $this->parseTestSet['merge_base']['parsed']
-        );
-      $m = WeirdoUrl::unparse( $f );
-      printf("%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::unparse( $f ) . '"', "\"{$t['expectUrl']}\"" );
-    }
-  }
- 
+		foreach( $this->mergeTestSet as $t ) {
+			if ( isset( $t['strict'] ) && $t['strict'] ) {
+				continue;
+			}
+			$f = WeirdoUrl::mergeUrls(
+					WeirdoUrl::parse( $t['refUrl'] ),
+					$this->parseTestSet['merge_base']['parsed']
+				);
+			$m = WeirdoUrl::unparse( $f );
+			printf( "%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::unparse( $f ) . '"', "\"{$t['expectUrl']}\"" );
+		}
+	}
 }
 // Once-only static initialization
 //WeidoUrl_ut::_initStatic();

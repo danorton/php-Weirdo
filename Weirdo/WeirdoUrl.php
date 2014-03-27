@@ -32,10 +32,10 @@ require_once __DIR__ . "/Weirdo.php";
 class WeirdoUrl extends Weirdo {
 
 	/** */
-  const VALID_ABSOLUTE = 1;
+	const VALID_ABSOLUTE = 1;
 
 	/** */
-  const VALID_RELATIVE = 2;
+	const VALID_RELATIVE = 2;
 
 	/** */
 	public static $schemeAttributes = array(
@@ -51,90 +51,90 @@ class WeirdoUrl extends Weirdo {
 	public function __construct() {
 	}
 
-  public function setText( $text ) {
-    $this->_reset();
-    if ( !( is_array( $text ) || is_object( $text ) ) ) {
-      $this->_text = "$text";
-    } else {
-      if ( $text !== null ) {
-        trigger_error(
-          sprintf( '%s: invalid parameter', __METHOD__ ),
-          E_USER_WARNING
-        );
-      }
-    }
-  }
-  
-  public function getText() {
-    if ( ( $this->_text === null ) ) {
-      if ( $this->_parsed === null ) {
-        trigger_error(
-          sprintf( '%s: reference to uninitialized value', __METHOD__ ),
-          E_USER_WARNING
-        );
-      }
-      $this->_text = self::unparse( $this->_parsed );
-    }
-    return $this->_text;
-  }
-  
-  public function setParsed( $parsed ) {
-    $this->_reset();
-    if ( is_array( $parsed ) ) {
-      $this->_parsed = $parsed;
-    } else {
-      if ( $parsed !== null) {
-        trigger_error(
-          sprintf( '%s: invalid parameter', __METHOD__ ),
-          E_USER_WARNING
-        );
-      }
-    }
-  }
-  
-  public function getParsed() {
-    if ( $this->_parsed === null ) {
-      if ( $this->_text === null ) {
-        trigger_error(
-          sprintf( '%s: reference to uninitialized value', __METHOD__ ),
-          E_USER_WARNING
-        );
-      }
-      $this->_parsed = self::parse( $this->_text );
-    }
-    return $this->_parsed;
-  }
- 
-  public function getValidity() {
-    if ( $this->_validity === null ) {
-      $this->_validity = self::evaluateValidity( $this->getParsed() );
-    }
-    return $this->_validity;
-  }
- 
-  public function getAuthority() {
-    if ( $this->_authority === null ) {
-      $this->_authority = self::extractAuthority( $this->getParsed() );
-    }
-    return $this->_authority;
-  }
-  
-  public function hasSameAuthority( $urlOrParts ) {
-    if ( is_subclass_of( $urlOrParts, __CLASS__ ) ) {
-      $urlOrParts = $urlOrParts->getParsed();
-    }
-    return self::haveSameAuthority( $this->getParsed(), $urlOrParts );
-  }
-  
-  public function buildMerged( $baseUrlOrParts ) {
-    if ( is_subclass_of( $baseUrlOrParts, __CLASS__ ) ) {
-      $baseUrlOrParts = $baseUrlOrParts->getParsed();
-    }
-    return self::mergeUrls( $this->getParsed(), $baseUrlOrParts );
-  }
- 
+	public function setText( $text ) {
+		$this->_reset();
+		if ( !( is_array( $text ) || is_object( $text ) ) ) {
+			$this->_text = "$text";
+		} else {
+			if ( $text !== null ) {
+				trigger_error(
+					sprintf( '%s: invalid parameter', __METHOD__ ),
+					E_USER_WARNING
+				);
+			}
+		}
+	}
+
+	public function getText() {
+		if ( ( $this->_text === null ) ) {
+			if ( $this->_parsed === null ) {
+				trigger_error(
+					sprintf( '%s: reference to uninitialized value', __METHOD__ ),
+					E_USER_WARNING
+				);
+			}
+			$this->_text = self::unparse( $this->_parsed );
+		}
+		return $this->_text;
+	}
+
+	public function setParsed( $parsed ) {
+		$this->_reset();
+		if ( is_array( $parsed ) ) {
+			$this->_parsed = $parsed;
+		} else {
+			if ( $parsed !== null ) {
+				trigger_error(
+					sprintf( '%s: invalid parameter', __METHOD__ ),
+					E_USER_WARNING
+				);
+			}
+		}
+	}
+
+	public function getParsed() {
+		if ( $this->_parsed === null ) {
+			if ( $this->_text === null ) {
+				trigger_error(
+					sprintf( '%s: reference to uninitialized value', __METHOD__ ),
+					E_USER_WARNING
+				);
+			}
+			$this->_parsed = self::parse( $this->_text );
+		}
+		return $this->_parsed;
+	}
+
+	public function getValidity() {
+		if ( $this->_validity === null ) {
+			$this->_validity = self::evaluateValidity( $this->getParsed() );
+		}
+		return $this->_validity;
+	}
+
+	public function getAuthority() {
+		if ( $this->_authority === null ) {
+			$this->_authority = self::extractAuthority( $this->getParsed() );
+		}
+		return $this->_authority;
+	}
+
+	public function hasSameAuthority( $urlOrParts ) {
+		if ( is_subclass_of( $urlOrParts, __CLASS__ ) ) {
+			$urlOrParts = $urlOrParts->getParsed();
+		}
+		return self::haveSameAuthority( $this->getParsed(), $urlOrParts );
+	}
+
+	public function buildMerged( $baseUrlOrParts ) {
+		if ( is_subclass_of( $baseUrlOrParts, __CLASS__ ) ) {
+			$baseUrlOrParts = $baseUrlOrParts->getParsed();
+		}
+		return self::mergeUrls( $this->getParsed(), $baseUrlOrParts );
+	}
+
 	private static function __setBaseUrl( $baseUrlOrParts ) {
-    if ( is_string( $baseUrlOrParts ) ) {
+		if ( is_string( $baseUrlOrParts ) ) {
 			$baseUrlOrParts = self::parse( $baseUrlOrParts );
 		}
 		if ( !$baseUrlOrParts ) {
@@ -151,13 +151,13 @@ class WeirdoUrl extends Weirdo {
 	 * This puts together what parse() took apart. cf. RFC 3986.
 	 */
 	public static function extractAuthority( $urlOrParts ) {
-    if ( is_string( $urlOrParts ) ) {
-      $urlOrParts = Weirdo::parse( $urlOrParts );
-    }
+		if ( is_string( $urlOrParts ) ) {
+			$urlOrParts = Weirdo::parse( $urlOrParts );
+		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
- 
+
 		if ( !self::hasAuthority( $urlOrParts ) ) {
 			return null;
 		}
@@ -184,18 +184,18 @@ class WeirdoUrl extends Weirdo {
 
 		// port
 		if ( isset( $urlOrParts['port'] ) ) {
-      // what's this scheme's default port?
-      $scheme = isset( $urlOrParts['scheme'] ) ? $urlOrParts['scheme'] : null;
-      $defaultPort = null;
-      // fetch the default port for the given scheme
-      if ( isset( self::$schemeAttributes[$scheme] ) && isset( self::$schemeAttributes[$scheme]['port'] ) ) {
-        $defaultPort = self::$schemeAttributes[$scheme]['port'];
-      }
-      // default port specified?
-      if ( ( (int)$urlOrParts['port'] ) !== $defaultPort ) {
-        // output the port separator/prefix and the port
-        $authority .= ':' . (int)$urlOrParts['port'];
-      }
+			// what's this scheme's default port?
+			$scheme = isset( $urlOrParts['scheme'] ) ? $urlOrParts['scheme'] : null;
+			$defaultPort = null;
+			// fetch the default port for the given scheme
+			if ( isset( self::$schemeAttributes[$scheme] ) && isset( self::$schemeAttributes[$scheme]['port'] ) ) {
+				$defaultPort = self::$schemeAttributes[$scheme]['port'];
+			}
+			// default port specified?
+			if ( ( (int)$urlOrParts['port'] ) !== $defaultPort ) {
+				// output the port separator/prefix and the port
+				$authority .= ':' . (int)$urlOrParts['port'];
+			}
 		}
 
 		return $authority;
@@ -364,7 +364,7 @@ $GLOBALS['bugbug'] && printf( "%u \$topOut=\"$topOut\"\n", __LINE__ );
 				if ( $eatDoubleDots || ( ( $topOut !== '.' ) && ( $topOut !== '..' ) ) ) {
 $GLOBALS['bugbug'] && printf( "%u POP??\n", __LINE__ );
 					if ( ( count( $output ) != 1 ) || ( ( $topOut !== '.' ) && ( $topOut !== '..' ) ) ) {
-            $addTail = $addTail || $lastSegment;
+						$addTail = $addTail || $lastSegment;
 						$topOut = array_pop( $output );
 $GLOBALS['bugbug'] && printf( "%u POP! %u \"%s\"\n", __LINE__, count( $input ), $topOut );
 						if ( count( $output ) == 0 ) {
@@ -372,23 +372,23 @@ $GLOBALS['bugbug'] && printf( "%u POP! %u \"%s\"\n", __LINE__, count( $input ), 
 						}
 					}
 				} elseif ( $topOut === '.' ) {
-          //$addTail = $addTail || $lastSegment;
-					$output[max(0,count( $output ) - 1)] = '..';
+					//$addTail = $addTail || $lastSegment;
+					$output[max( 0, count( $output ) - 1 )] = '..';
 				} else {
-          $output[] = '..';
-        }
+					$output[] = '..';
+				}
 			} elseif ( $segment !== '.' ) {
-        //$addTail = $addTail || $lastSegment;
+				//$addTail = $addTail || $lastSegment;
 				if ( ( count( $output ) == 1 ) && ( $output[0] === '.' ) ) {
 				  $output[0] = $segment;
 				} else {
 					$output[] = $segment;
 				}
 			} elseif ( ( count( $output ) == 0 ) || ( $output[count( $output ) - 1] !== '.' ) ) {
-        $addTail = $addTail || $lastSegment;
-        if ( count( $output ) == 0 ) {
+				$addTail = $addTail || $lastSegment;
+				if ( count( $output ) == 0 ) {
 				  $output[] = '.';
-        }
+				}
 			}
 $GLOBALS['bugbug'] && printf( "%u ** produces (\"%s\")\n", __LINE__, implode( '","', $output ) );
 $GLOBALS['bugbug'] && printf( "%u   ** keys: (\"%s\")\n", __LINE__, implode( '","', array_keys($output) ) );
@@ -398,17 +398,17 @@ $GLOBALS['bugbug'] && printf( "%u   ** keys: (\"%s\")\n", __LINE__, implode( '",
 $GLOBALS['bugbug'] && printf( "%u POP-A-DOT!\n", __LINE__ );
 				$topOut = array_pop( $output ); //$output[count( $output ) - 1] = '';
 $GLOBALS['bugbug'] && printf( "%u POP! \"%s\"\n", __LINE__, $topOut );
-        $addTail = true;
+				$addTail = true;
 			} else {
 				$output[count( $output ) - 1] = '.';
-        $addTail = true;
+				$addTail = true;
 $GLOBALS['bugbug'] && printf( "%u ADD-A-DOT!\n", __LINE__ );
 				break;
 			}
 		}
-    if ( $absPrefix && ( count( $output ) == 0 ) ) {
-      $addTail = false;
-    }
+		if ( $absPrefix && ( count( $output ) == 0 ) ) {
+			$addTail = false;
+		}
 		$result = $absPrefix . implode( '/', $output ) . ( $addTail ? '/' : '' );
 $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 		return $result;
@@ -450,9 +450,9 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 	}
 
 	public static function hasAuthority( $urlOrParts ) {
-    if ( is_string( $urlOrParts ) ) {
-      $urlOrParts = Weirdo::parse( $urlOrParts );
-    }
+		if ( is_string( $urlOrParts ) ) {
+			$urlOrParts = Weirdo::parse( $urlOrParts );
+		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
@@ -461,16 +461,16 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 			|| isset( $urlOrParts['pass'] )
 			|| isset( $urlOrParts['user'] )
 			|| isset( $urlOrParts['port'] )
-    ;
+		;
 	}
 
-  /**
-   * A valid authority must have a host. If it has a password, then it must also have a user
-   */
+	/**
+	 * A valid authority must have a host. If it has a password, then it must also have a user
+	 */
 	public static function hasValidAuthority( $urlOrParts ) {
-    if ( is_string( $urlOrParts ) ) {
-      $urlOrParts = Weirdo::parse( $urlOrParts );
-    }
+		if ( is_string( $urlOrParts ) ) {
+			$urlOrParts = Weirdo::parse( $urlOrParts );
+		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
@@ -480,11 +480,11 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 	}
 
 	public static function haveSameAuthority( $urlOrParts1, $urlOrParts2 ) {
-    $urlOrParts1 = is_string( $urlOrParts1 ) ? Weirdo::parse( $urlOrParts1 ) : $urlOrParts1;
+		$urlOrParts1 = is_string( $urlOrParts1 ) ? Weirdo::parse( $urlOrParts1 ) : $urlOrParts1;
 		if ( !$urlOrParts1 ) {
 			return false;
 		}
-    $urlOrParts2 = is_string( $urlOrParts2 ) ? Weirdo::parse( $urlOrParts2 ) : $urlOrParts2;
+		$urlOrParts2 = is_string( $urlOrParts2 ) ? Weirdo::parse( $urlOrParts2 ) : $urlOrParts2;
 		if ( !$urlOrParts2 ) {
 			return false;
 		}
@@ -505,15 +505,15 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 	 * Get fully qualified URL parts from the given (possibly relative) URL.
 	 */
 	public static function mergeUrls( $urlOrParts, $baseUrlOrParts ) {
-    if ( is_string( $urlOrParts ) ) {
-      $urlOrParts = Weirdo::parse( $urlOrParts );
-    }
+		if ( is_string( $urlOrParts ) ) {
+			$urlOrParts = Weirdo::parse( $urlOrParts );
+		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
-    if ( is_string( $baseUrlOrParts ) ) {
-      $baseUrlOrParts = Weirdo::parse( $baseUrlOrParts );
-    }
+		if ( is_string( $baseUrlOrParts ) ) {
+			$baseUrlOrParts = Weirdo::parse( $baseUrlOrParts );
+		}
 		if ( !$baseUrlOrParts ) {
 			return false;
 		}
@@ -523,7 +523,7 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 			$urlOrParts['scheme'] = $baseUrlOrParts['scheme'];
 
 			// merge the authorities
-			if ( (!self::hasAuthority( $urlOrParts )) || ( self::haveSameAuthority( $urlOrParts, $baseUrlOrParts ) ) ) {
+			if ( ( !self::hasAuthority( $urlOrParts ) ) || ( self::haveSameAuthority( $urlOrParts, $baseUrlOrParts ) ) ) {
 				foreach( array( 'user', 'pass', 'host', 'port' ) as $part ) {
 					if ( isset( $baseUrlOrParts[$part] ) ) {
 						$urlOrParts[$part] = $baseUrlOrParts[$part];
@@ -531,7 +531,7 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 				}
 
 				// merge the paths
-				if ( (!isset( $urlOrParts['path'] ) ) || ( substr( $urlOrParts['path'], 0, 1 ) !== '/' ) ) {
+				if ( ( !isset( $urlOrParts['path'] ) ) || ( substr( $urlOrParts['path'], 0, 1 ) !== '/' ) ) {
 					$path = isset( $urlOrParts['path'] ) ? $urlOrParts['path'] : null;
 					if ( ( $path === null ) || ( $path === '' ) ) {
 						if ( isset( $baseUrlOrParts['query'] ) && !isset( $urlOrParts['query'] ) ) {
@@ -571,34 +571,34 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 			$urlOrParts = self::parse( $url );
 		}
 		if ( !$urlOrParts ) {
-      // not valid if we can't parse it
+			// not valid if we can't parse it
 			return false;
 		}
-    
+
 		$scheme = isset( $urlOrParts['scheme'] ) ? $urlOrParts['scheme'] : null;
 		$hasAuthority = self::hasAuthority( $urlOrParts );
 		$path = isset( $urlOrParts['path'] ) ? $urlOrParts['path'] : null;
-    
-    if ( $hasAuthority && !self::hasValidAuthority( $urlOrParts ) ) {
-      // it has some authority subcomponents, but not a valid set to make the authority valid
-      return false;
-    }
+
+		if ( $hasAuthority && !self::hasValidAuthority( $urlOrParts ) ) {
+			// it has some authority subcomponents, but not a valid set to make the authority valid
+			return false;
+		}
 
 		// a valid absolute URL must have a scheme, an authority and a path
 		if ( $scheme && $hasAuthority && $path ) {
 			return self::VALID_ABSOLUTE;
 		}
- 
+
 		return VALID_RELATIVE;
 	}
 
-  private function _reset() {
-    $this->_text = null;
-    $this->_parsed = null;
-    $this->_validity = null;
-    $this->_authority = null;
-  }
-  
+	private function _reset() {
+		$this->_text = null;
+		$this->_parsed = null;
+		$this->_validity = null;
+		$this->_authority = null;
+	}
+
 	/**
 	 * Initialize this class's static properties.
 	 * @private
@@ -610,7 +610,7 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 	 * a WMException.
 	 */
 	public static function _initStatic() {
-    throw new ErrorException( 'Error: Attempt to invoke private method ' . __METHOD__ . '().' );
+		throw new ErrorException( 'Error: Attempt to invoke private method ' . __METHOD__ . '().' );
 		if ( !isset( self::$_staticInitComplete ) ) {
 		}
 		else {
@@ -618,16 +618,16 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 		}
 	}
 
-  private $_text;
-  
-  private $_parsed;
-  
-  private $_validity;
-  
-  private $_authority;
-  
-  private $_baseUrl;
-  
+	private $_text;
+
+	private $_parsed;
+
+	private $_validity;
+
+	private $_authority;
+
+	private $_baseUrl;
+
 }
 // Once-only static initialization
 //WeirdoUrl::_initStatic();
