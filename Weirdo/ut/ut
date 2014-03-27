@@ -25,8 +25,6 @@
  * @}
  */
 
-$GLOBALS['bugbug'] = 0;
-//$GLOBALS['bugbug'] = 1;
 require_once __DIR__ . "/../WeirdoCommandLineApp.php";
 require_once __DIR__ . "/../WeirdoUrl.php";
 
@@ -52,14 +50,16 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 		'dotdot2'    => array(
 			 'url' => 'a/../../..',
 			 'parsed' => array( 'path' => '../..', ),
+			 'unparsed' => '../..',
 		),
 		'absdotdot3' => array(
 			 'url' => '/a/../../..',
 			 'parsed' => array( 'path' => '/', ),
+			 'unparsed' => '/',
 		),
 		'merge_base'   => array(
 			 'url' => 'http://a/b/c/d;p?q',
-			 'parsed' => array( 'scheme' => 'http', 'host' => 'a', 'path' => '/b/c/d;p', 'query=q' ),
+			 'parsed' => array( 'scheme' => 'http', 'host' => 'a', 'path' => '/b/c/d;p', 'query' => 'q' ),
 		),
 	);
 
@@ -85,12 +85,10 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 			'refUrl' => "/g",
 			'expectUrl' => "http://a/g",
 		),
-//*///
 		array(
 			'refUrl' => "//g",
 			'expectUrl' => "http://g",
 		),
-//*///
 		array(
 			'refUrl' => "?y",
 			'expectUrl' => "http://a/b/c/d;p?y",
@@ -99,6 +97,7 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 			'refUrl' => "g?y",
 			'expectUrl' => "http://a/b/c/g?y",
 		),
+//*///
 		array(
 			'refUrl' => "#s",
 			'expectUrl' => "http://a/b/c/d;p?q#s",
@@ -123,10 +122,12 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 			'refUrl' => "g;x?y#s",
 			'expectUrl' => "http://a/b/c/g;x?y#s",
 		),
+//*///
 		array(
 			'refUrl' => "",
 			'expectUrl' => "http://a/b/c/d;p?q",
 		),
+//*///
 		array(
 			'refUrl' => ".",
 			'expectUrl' => "http://a/b/c/",
@@ -244,19 +245,27 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 //*///
 	);
 
-	protected function _run( $args, $env ) {
+	protected function _run() {
+
+		$this->_getopt();
+		$this->_debug = isset( $this->_options['debug'] );
+		if ( $this->_debug ) {
+			$GLOBALS['gWeirdoDebug'] = 1;
+		}
+		$this->_init();
 
 		foreach ( $this->parseTestSet as $name => &$item ) {
-			$urlParts = WeirdoUrl::parse( $item['url'] );
 			// bugbug - compare $urlParts against 'parsed'
-			$urlRebuilt = WeirdoUrl::unparse( $urlParts );
-			$this->parseTestSet[$name]['parsed'] = $urlParts;
-			if (0&& $urlRebuilt !== $item['url'] ) {
-				printf( "===\n" );
-				printf( "name: %s\n", $name );
+			$urlRebuilt = WeirdoUrl::unparse( $item['url'] );
+			$expectedRebuilt = isset( $item['unparsed'] )
+				? $item['unparsed']
+				: $item['url']->getText();
+			if ( $urlRebuilt !== $expectedRebuilt ) {
+				printf( "=====\n" );
+				printf( " name: %s\n", $name );
 				printf( " orig: \"%s\"\n", $item['url'] );
 				printf( "built: \"%s\"\n", $urlRebuilt );
-				0&&var_dump( $urlParts );
+				var_dump( $item['parsed'] );
 			}
 		}
 
@@ -268,18 +277,41 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 				continue;
 			}
 			$f = WeirdoUrl::mergeUrls(
-					WeirdoUrl::parse( $t['refUrl'] ),
+					$t['refUrl'],
 					$this->parseTestSet['merge_base']['parsed']
 				);
 			$m = WeirdoUrl::unparse( $f );
 			printf( "%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::unparse( $f ) . '"', "\"{$t['expectUrl']}\"" );
 		}
 	}
+
+	private function _init() {
+		foreach ( $this->parseTestSet as $name => &$item ) {
+			$item['url'] = new WeirdoUrl( $item['url'] );
+		}
+	}
+
+	/**
+	 * Initialize this class's static properties.
+	 * @private
+	 *
+	 * PHP only allows variable declarations with simple constants, so we have this
+	 * function for more complex initialization of statics. Although "public" in
+	 * construction, it is usable in this source file, only, immediately after this
+	 * class is declared. Any attempt to invoke this method a second time will throw
+	 * a WMException.
+	 */
+	public static function _initStatic() {
+	}
+
+	protected $_optargs = null;
+	protected $_longopts = array( 'debug::' );
+
 }
 // Once-only static initialization
-//WeidoUrl_ut::_initStatic();
+WeidoUrl_ut::_initStatic();
 
-exit ( WeidoUrl_ut::run( $argv, $_ENV ) );
+exit ( WeidoUrl_ut::run() );
 
 /** @}*/
 
