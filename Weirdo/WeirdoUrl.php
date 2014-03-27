@@ -494,7 +494,7 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 				return false;
 			}
 			// if defined, they have identical values
-			if ( isset( $urlOrParts1[$part] ) && ( $urlOrParts1[$part] !== $urlOrParts1[$part] ) ) {
+			if ( isset( $urlOrParts1[$part] ) && ( $urlOrParts1[$part] !== $urlOrParts2[$part] ) ) {
 				return false;
 			}
 		}

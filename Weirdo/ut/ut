@@ -64,6 +64,7 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
   );
 
   public $mergeTestSet = array(
+//*///
     array(
 			'refUrl' => "g:h",
 			'expectUrl' => "g:h",
@@ -84,10 +85,12 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 			'refUrl' => "/g",
 			'expectUrl' => "http://a/g",
 		),
+//*///
 		array(
 			'refUrl' => "//g",
 			'expectUrl' => "http://g",
 		),
+//*///
 		array(
 			'refUrl' => "?y",
 			'expectUrl' => "http://a/b/c/d;p?y",
@@ -238,6 +241,7 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 			'refUrl' => "http:g",
 			'expectUrl' => "http:g",
     ),
+//*///
   );
 
   protected function _run( $args, $env ) {
@@ -255,16 +259,6 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
         0&&var_dump( $urlParts );
       }
     }
-
-
-    0 && var_dump(
-      WeirdoUrl::mergeUrls(
-        $this->parseTestSet['abspath']['url'],
-        $this->parseTestSet['abspath']['parsed'],
-        $this->parseTestSet['google']['parsed']
-      )
-    );
-
 
     echo "===========================\n";
     printf("merge_base=\n  %s\n", $this->parseTestSet['merge_base']['url']);
