@@ -1,4 +1,13 @@
 <?php
+/**
+ *
+ * If not using actual command line args:
+ *   php -d register_argc_argv=false
+ *
+ * On autostart first line of shell scripts:
+ *   #!/usr/bin/php -d register_argc_argv=false
+ *
+ */
 
 abstract class WeirdoCommandLineApp {
 
