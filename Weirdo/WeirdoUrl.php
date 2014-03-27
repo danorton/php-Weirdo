@@ -24,12 +24,15 @@
  * @}
  */
 
-$GLOBALS['bugbug'] = 0;
-//$GLOBALS['bugbug'] = 1;
 require_once __DIR__ . "/Weirdo.php";
 
+if ( !isset( $GLOBALS['gWeirdoDebug'] ) ) {
+	$GLOBALS['gWeirdoDebug'] = 0;
+	//$GLOBALS['gWeirdoDebug'] = 1;
+}
 
-class WeirdoUrl extends Weirdo {
+
+class WeirdoUrl {
 
 	/** */
 	const VALID_ABSOLUTE = 1;
@@ -48,7 +51,10 @@ class WeirdoUrl extends Weirdo {
 	/** Class constructor.
 	 *
 	 */
-	public function __construct() {
+	public function __construct( $urlText = null ) {
+		if ( $urlText !== null ) {
+			$this->setText( $urlText );
+		}
 	}
 
 	public function setText( $text ) {
@@ -76,6 +82,10 @@ class WeirdoUrl extends Weirdo {
 			$this->_text = self::unparse( $this->_parsed );
 		}
 		return $this->_text;
+	}
+
+	public function __toString() {
+		return $this->getText();
 	}
 
 	public function setParsed( $parsed ) {
@@ -120,14 +130,14 @@ class WeirdoUrl extends Weirdo {
 	}
 
 	public function hasSameAuthority( $urlOrParts ) {
-		if ( is_subclass_of( $urlOrParts, __CLASS__ ) ) {
+		if ( is_a( $urlOrParts, __CLASS__ ) ) {
 			$urlOrParts = $urlOrParts->getParsed();
 		}
 		return self::haveSameAuthority( $this->getParsed(), $urlOrParts );
 	}
 
 	public function buildMerged( $baseUrlOrParts ) {
-		if ( is_subclass_of( $baseUrlOrParts, __CLASS__ ) ) {
+		if ( is_a( $baseUrlOrParts, __CLASS__ ) ) {
 			$baseUrlOrParts = $baseUrlOrParts->getParsed();
 		}
 		return self::mergeUrls( $this->getParsed(), $baseUrlOrParts );
@@ -207,6 +217,9 @@ class WeirdoUrl extends Weirdo {
 	 * This puts together what parse() took apart. cf. RFC 3986.
 	 */
 	public static function unparse( $urlParts ) {
+		if ( is_a( $urlParts, __CLASS__ ) ) {
+			$urlParts = $urlParts->getParsed();
+		}
 		$url = '';
 		$defaultPort = null;
 
@@ -324,7 +337,7 @@ class WeirdoUrl extends Weirdo {
 		if ( !strlen( $urlPath ) ) {
 			return $urlPath;  // degenerate case
 		}
-$GLOBALS['bugbug'] && printf("%4u start=\"%s\"\n", __LINE__, $urlPath );
+$GLOBALS['gWeirdoDebug'] && printf("%4u start=\"%s\"\n", __LINE__, $urlPath );
 		$addTail = false;
 		$input = array_reverse( explode( '/', $urlPath ) );
 		if ( $urlPath[0] === '/' ) {
@@ -347,12 +360,12 @@ $GLOBALS['bugbug'] && printf("%4u start=\"%s\"\n", __LINE__, $urlPath );
 		while( count( $input ) ) {
 			$segment = array_pop( $input );
 			$lastSegment = count( $input ) == 0;
-$GLOBALS['bugbug'] && printf( "%u ** apply \"%s\" to (\"%s\")\n", __LINE__, $segment, implode( '","', $output ) );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u ** apply \"%s\" to (\"%s\")\n", __LINE__, $segment, implode( '","', $output ) );
 			if ( $segment === '' ) {
 				$segment = '.';
 			}
 			if ( $segment === '..' ) {
-$GLOBALS['bugbug'] && printf( "%u POP??\n", __LINE__ );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u POP??\n", __LINE__ );
 				$topOut = count( $output )
 					? $output[count( $output ) - 1]
 					: null
@@ -360,13 +373,13 @@ $GLOBALS['bugbug'] && printf( "%u POP??\n", __LINE__ );
 				if ( $topOut == '' ) {
 					$topOut = '.';
 				}
-$GLOBALS['bugbug'] && printf( "%u \$topOut=\"$topOut\"\n", __LINE__ );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u \$topOut=\"$topOut\"\n", __LINE__ );
 				if ( $eatDoubleDots || ( ( $topOut !== '.' ) && ( $topOut !== '..' ) ) ) {
-$GLOBALS['bugbug'] && printf( "%u POP??\n", __LINE__ );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u POP??\n", __LINE__ );
 					if ( ( count( $output ) != 1 ) || ( ( $topOut !== '.' ) && ( $topOut !== '..' ) ) ) {
 						$addTail = $addTail || $lastSegment;
 						$topOut = array_pop( $output );
-$GLOBALS['bugbug'] && printf( "%u POP! %u \"%s\"\n", __LINE__, count( $input ), $topOut );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u POP! %u \"%s\"\n", __LINE__, count( $input ), $topOut );
 						if ( count( $output ) == 0 ) {
 							$output[] = '.';
 						}
@@ -390,19 +403,18 @@ $GLOBALS['bugbug'] && printf( "%u POP! %u \"%s\"\n", __LINE__, count( $input ), 
 				  $output[] = '.';
 				}
 			}
-$GLOBALS['bugbug'] && printf( "%u ** produces (\"%s\")\n", __LINE__, implode( '","', $output ) );
-$GLOBALS['bugbug'] && printf( "%u   ** keys: (\"%s\")\n", __LINE__, implode( '","', array_keys($output) ) );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u ** produces (\"%s\")\n", __LINE__, implode( '","', $output ) );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u   ** keys: (\"%s\")\n", __LINE__, implode( '","', array_keys($output) ) );
 		}
 		while ( ( count( $output ) > 0 ) && ( $output[count( $output ) - 1] === '.' ) ) {
 			if (0|| $absPrefix || ( count( $output ) > 1 ) ) {
-$GLOBALS['bugbug'] && printf( "%u POP-A-DOT!\n", __LINE__ );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u POP-A-DOT!\n", __LINE__ );
 				$topOut = array_pop( $output ); //$output[count( $output ) - 1] = '';
-$GLOBALS['bugbug'] && printf( "%u POP! \"%s\"\n", __LINE__, $topOut );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u POP! \"%s\"\n", __LINE__, $topOut );
 				$addTail = true;
 			} else {
-				$output[count( $output ) - 1] = '.';
-				$addTail = true;
-$GLOBALS['bugbug'] && printf( "%u ADD-A-DOT!\n", __LINE__ );
+				$addTail = $output[count( $output ) - 1] !== '.' ;
+$GLOBALS['gWeirdoDebug'] && printf( "%4u LAST-IS-DOT!\n", __LINE__ );
 				break;
 			}
 		}
@@ -410,7 +422,7 @@ $GLOBALS['bugbug'] && printf( "%u ADD-A-DOT!\n", __LINE__ );
 			$addTail = false;
 		}
 		$result = $absPrefix . implode( '/', $output ) . ( $addTail ? '/' : '' );
-$GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
+$GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 		return $result;
 	}
 
@@ -505,14 +517,16 @@ $GLOBALS['bugbug'] && printf( "%u result=\"%s\"\n", __LINE__, $result);
 	 * Get fully qualified URL parts from the given (possibly relative) URL.
 	 */
 	public static function mergeUrls( $urlOrParts, $baseUrlOrParts ) {
+$GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__, $urlOrParts);
 		if ( is_string( $urlOrParts ) ) {
-			$urlOrParts = Weirdo::parse( $urlOrParts );
+			$urlOrParts = WeirdoUrl::parse( $urlOrParts );
 		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
+
 		if ( is_string( $baseUrlOrParts ) ) {
-			$baseUrlOrParts = Weirdo::parse( $baseUrlOrParts );
+			$baseUrlOrParts = WeirdoUrl::parse( $baseUrlOrParts );
 		}
 		if ( !$baseUrlOrParts ) {
 			return false;
