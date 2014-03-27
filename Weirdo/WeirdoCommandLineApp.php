@@ -2,32 +2,95 @@
 
 abstract class WeirdoCommandLineApp {
 
-  public function __construct( $args, $env ) {
-    $this->_argsDefault = $args;
-    $this->_envDefault = $env;
+  public function __construct( $argv = null, $env = null ) {
+    $this->init( $argv, $env );
   }
- 
-  public function run( $args = null, $env = null ) {
-    if ( !isset( $this ) ) {
-      $s = new static( $args, $env );
-      return $s->run();
-    }
-    if ( $args === null ) {
-      $this->_args = $this->_argsDefault;
+  
+  public function run( $argv = null, $env = null ) {
+    $_this = isset( $this ) ? $this : new static();
+    $_this->init( $argv, $env );
+    return $_this->_run();
+  }
+  
+  public function init( $argvParam = null, $env = null ) {
+    if ( $argvParam === null ) {
+      global $argv;
+      $argvParam = isset( $argv ) ? $argv : array( $_SERVER['SCRIPT_NAME'] );
     }
     if ( $env === null ) {
-      $this->_env = $this->_envDefault;
+      $env = $_ENV;
+    }
+    $this->_argv = $argvParam;
+    $this->_env = $env;
+  }
+  
+  protected function _getopt( $optargs = null /*, ... */ ) {
+    $functionArgs = func_get_args();
+    if ( !isset( $functionArgs[0] ) ) {
+      $functionArgs[0] = $this->_optargs;
+    }
+    if ( ( !isset( $functionArgs[1] ) ) && isset( $this->_longopts ) )  {
+      // n.b. getopt before PHP 5.3 might trigger an error with this parameter
+      $functionArgs[1] = $this->_longopts;
     }
     
-    return $this->_run( $this->_args, $this->_env );
+    // TODO: get a better getopt(), where this isn't necessary
+    global $argv;
+    $save_argv = $argv;
+    $argv = $this->_argv;
+    
+    $this->_options = call_user_func_array( 'getopt', $functionArgs );
+    
+    // remove all options from the argument array
+    // TODO: remove only valid options; fail on invalid options via $this->_usage()
+    // TODO: move this inside a better getopt()
+    $argc = count( $argv );
+    for ( $i = 1; $i < $argc ; $i++ ) {
+      $v = $argv[$i];
+      if ( isset( $argv[$i][0] ) && ( $argv[$i][0] === '-' ) ) {
+        unset( $argv[$i] );
+        if ( $v === '--' ) {
+          break;
+        }
+      }
+    }
+    // renumber the array keys
+    $argv = array_values( $argv );
+ 
+    $this->_argv = $argv;
+    $argv = $save_argv;
+    return $this->_options;
+  }
+  
+  protected function _getEnv( $name = null ) {
+    if ( $name === null ) {
+      return $this->_env;
+    }
+    return isset( $this->_env[$name] ) ? $this->_env[$name] : null;
   }
  
-  public static function _initStatics() {
+  protected function _usage() {
+    trigger_error(
+      sprintf( "%s: Unrecognized command line option(s).\n", basename( $this->_argv[0] ) ),
+      E_USER_ERROR
+    );
   }
+ 
+  protected abstract function _run();
   
-  protected abstract function _run( $args, $env ) ;
+  /** command line single-character options */
+  protected $_optargs = 'v::';
+ 
+  /** command line long-name options */
+  protected $_longopts = array( 'verbose::' );
+ 
+  /** command line arguments */
+  protected $_argv;
   
-  private $_args, $_argsDefault;
-  private $_env, $_envDefault;
+  /** environment */
+  protected $_env;
+  
+  /** options provided on the command line */
+  protected $_options;
  
 }
