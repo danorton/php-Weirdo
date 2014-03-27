@@ -245,7 +245,7 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
     foreach ( $this->parseTestSet as $name => &$item ) {
       $urlParts = WeirdoUrl::parse( $item['url'] );
       // bugbug - compare $urlParts against 'parsed'
-      $urlRebuilt = WeirdoUrl::urlFromParts( $urlParts );
+      $urlRebuilt = WeirdoUrl::unparse( $urlParts );
       $this->parseTestSet[$name]['parsed'] = $urlParts;
       if (0&& $urlRebuilt !== $item['url'] ) {
         printf("===\n");
@@ -258,7 +258,7 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 
 
     0 && var_dump(
-      WeirdoUrl::mergeUrlsFromParts(
+      WeirdoUrl::mergeUrls(
         $this->parseTestSet['abspath']['url'],
         $this->parseTestSet['abspath']['parsed'],
         $this->parseTestSet['google']['parsed']
@@ -273,12 +273,12 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
       if ( isset( $t['strict'] ) && $t['strict'] ) {
         continue;
       }
-      $f = WeirdoUrl::mergeUrlsFromParts(
+      $f = WeirdoUrl::mergeUrls(
           WeirdoUrl::parse($t['refUrl']),
           $this->parseTestSet['merge_base']['parsed']
         );
-      $m = WeirdoUrl::urlFromParts( $f );
-      printf("%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::urlFromParts( $f ) . '"', "\"{$t['expectUrl']}\"" );
+      $m = WeirdoUrl::unparse( $f );
+      printf("%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::unparse( $f ) . '"', "\"{$t['expectUrl']}\"" );
     }
   }
  

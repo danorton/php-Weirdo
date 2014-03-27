@@ -209,7 +209,7 @@ class Weirdo {
     foreach ( $array as $k => $v ) {
       // replace null array key with a valid object field name
       if ( $k === '' ) {
-        $k = '_null_' . __FUNCTION__;
+        $k = '_null_' . __METHOD__;
       }
       if ( is_array( $v ) ) {
         $o->{$k} = self::objectFromArray( $v ); // recurse on arrays
