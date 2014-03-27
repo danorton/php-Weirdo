@@ -32,6 +32,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * @}
  */
+ 
+require_once __DIR__ . "/WeirdoSingleton.php";
 
 /**
  * This class provides various utility functions.
@@ -39,7 +41,7 @@
  * It can be used either statically or via its singleton.
  *
  */
-class Weirdo {
+class Weirdo extends WeirdoSingleton {
 
 	/** See http://php.net/debug_backtrace for semantics. */
 	const DEBUG_BACKTRACE_PROVIDE_OBJECT = 0x0001;
@@ -59,30 +61,6 @@ class Weirdo {
 	public static $userErrorTypeText = array(
 		0x0100 => 'Fatal error',
 	);
-
-	/**
-	 * Constructor for class's singleton object.
-	 *
-	 * Throws ErrorException if singleton already created.
-	 */
-	public function __construct() {
-		if ( self::$_self || !self::$_singleton ) {
-			throw new ErrorException( 'Invalid attempt to instantiate static/singleton ' . __CLASS__ . ' class' );
-		}
-	}
-
-	/**
-	 * Get class's singleton object.
-	 *
-	 * @returns     Weirdo instance.
-	 */
-	public static function singleton() {
-		if ( !self::$_self ) {
-			self::$_singleton = true;
-			self::$_self = new self();
-		}
-		return self::$_self;
-	}
 
 	/** */
 	public static function wordsFromIdName( $idName ) {
@@ -267,12 +245,6 @@ class Weirdo {
 
 	/** */
 	private static $_backtraceHasLimit;
-
-	/** Reference to singleton instance. */
-	public static $_self;
-
-	/** Flag set when singleton() invoked. */
-	public static $_singleton;
 
 }
 // Once-only invocation to initialize static properties
