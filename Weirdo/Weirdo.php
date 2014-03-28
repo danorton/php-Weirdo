@@ -213,7 +213,7 @@ class Weirdo extends WeirdoSingleton {
 		}
 		if ( !$autoloadEnabled ) {
 			foreach ( self::$_weirdoAutoloadClasses as $autoloadClass ) {
-				if ( !self::setAutoloadClassFile( $autoloadClass, __DIR__ . "/$autoloadClass.php" ) ) {
+				if ( !self::setAutoloadClassFile( $autoloadClass, __DIR__ . "/$autoloadClass.php", false ) ) {
 					return false;
 				}
 			}
@@ -223,13 +223,13 @@ class Weirdo extends WeirdoSingleton {
 	}
 
 	/** */
-	public static function setAutoloadClassFile( $classNameOrArray, $classFile ) {
+	public static function setAutoloadClassFile( $classNameOrArray, $classFile, $resolvePath = false ) {
 		if ( !is_array( $classNameOrArray ) ) {
-			return self::_setAutoloadClassFile( $classNameOrArray, $classFile );
+			return self::_setAutoloadClassFile( $classNameOrArray, $classFile, $resolvePath );
 		}
 		/* else */
 		foreach ( $classNameOrArray as $className ) {
-			if ( !self::_setAutoloadClassFile( $className, $classFile ) ) {
+			if ( !self::_setAutoloadClassFile( $className, $classFile, $resolvePath ) ) {
 				return false;
 			}
 		}
@@ -245,11 +245,11 @@ class Weirdo extends WeirdoSingleton {
 
 	/** */
 	public function stream_resolve_include_path( $filename ) {
-		static $usePhpFunction = null;
-		if ( $usePhpFunction === null ) {
-			$usePhpFunction = self::$K['PHP_VERSION_ID'] >= 50302;
+		static $useGlobalFunction = null;
+		if ( $useGlobalFunction === null ) {
+			$useGlobalFunction = function_exists( 'stream_resolve_include_path' );
 		}
-		if ( $usePhpFunction ) {
+		if ( $useGlobalFunction ) {
 			return stream_resolve_include_path( $filename );
 		}
 		/* else */
@@ -264,18 +264,20 @@ class Weirdo extends WeirdoSingleton {
 	}
 
 	/** */
-	private static function _setAutoloadClassFile( $className, $classFile ) {
+	private static function _setAutoloadClassFile( $className, $classFile, $resolvePath ) {
 		static $autoloadEnabled;
 		$lcClassName = strtolower( $className );
-		$fullPath = self::stream_resolve_include_path( $classFile );
-		if ( !$fullPath ) {
-			// there's no file by that name
-			return false;
+		if ( $resolvePath ) {
+			$classFile = self::stream_resolve_include_path( $classFile );
+			if ( !$classFile ) {
+				// there's no file by that name
+				return false;
+			}
 		}
 		// see if a mapping already exists
 		if ( isset( self::$_autoloadFiles[$lcClassName] ) ) {
 			// ignore if this new mapping is identical to the current mapping
-			if ( self::$_autoloadFiles[$lcClassName] === $fullPath ) {
+			if ( self::$_autoloadFiles[$lcClassName] === $classFile ) {
 				// mapping already exists
 				return true;
 			}
@@ -283,7 +285,7 @@ class Weirdo extends WeirdoSingleton {
 		if ( !$autoloadEnabled ) {
 			$autoloadEnabled = spl_autoload_register( __CLASS__ . '::_autoloader', false );
 		}
-		self::$_autoloadFiles[$lcClassName] = $fullPath;
+		self::$_autoloadFiles[$lcClassName] = $classFile;
 		return true;
 	}
 
