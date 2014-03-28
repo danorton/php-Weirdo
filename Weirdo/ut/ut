@@ -28,7 +28,10 @@
 require_once __DIR__ . "/../WeirdoCommandLineApp.php";
 require_once __DIR__ . "/../WeirdoUrl.php";
 
-class WeidoUrl_ut extends WeirdoCommandLineApp {
+/**
+ * Perform unit test for Weirdo module.
+ */
+class Weirdo_ut extends WeirdoCommandLineApp {
 
 	public $parseTestSet = array(
 		'google'     => array(
@@ -255,13 +258,25 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 		$this->_init();
 
 		foreach ( $this->parseTestSet as $name => &$item ) {
-			// bugbug - compare $urlParts against 'parsed'
-			$urlRebuilt = WeirdoUrl::unparse( $item['url'] );
+
+			// validate the basic URL parser
+			if ( !WeirdoUrl::equalParsed( $item['weirdUrl']->getParsed(), $item['parsed'] ) ) {
+				printf( "===== parse failure\n" );
+				printf( " name: %s\n", $name );
+				printf( "  url: %s\n", $item['url'] );
+				printf( " got: " );
+				var_dump( $item['weirdUrl']->getParsed() );
+				printf( "expected: " );
+				var_dump( $item['parsed'] );
+			}
+
+			// validate the unparser
+			$urlRebuilt = WeirdoUrl::unparse( $item['weirdUrl']->getParsed() );
 			$expectedRebuilt = isset( $item['unparsed'] )
 				? $item['unparsed']
-				: $item['url']->getText();
+				: $item['url'];
 			if ( $urlRebuilt !== $expectedRebuilt ) {
-				printf( "=====\n" );
+				printf( "===== unparse failure\n" );
 				printf( " name: %s\n", $name );
 				printf( " orig: \"%s\"\n", $item['url'] );
 				printf( "built: \"%s\"\n", $urlRebuilt );
@@ -269,25 +284,33 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 			}
 		}
 
+		// validate the merge functions (also tests path merge and dot removal)
 		echo "===========================\n";
-		printf( "merge_base=\n  %s\n", $this->parseTestSet['merge_base']['url'] );
+		printf( "merge_base=\n  \"%s\"\n", $this->parseTestSet['merge_base']['weirdUrl'] );
 
 		foreach( $this->mergeTestSet as $t ) {
+			// skip "strict" items, as we parse in compatibility mode
 			if ( isset( $t['strict'] ) && $t['strict'] ) {
 				continue;
 			}
+			// merge the test URL with the base
 			$f = WeirdoUrl::mergeUrls(
 					$t['refUrl'],
 					$this->parseTestSet['merge_base']['parsed']
 				);
+			// get the text URL that results
 			$m = WeirdoUrl::unparse( $f );
 			printf( "%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::unparse( $f ) . '"', "\"{$t['expectUrl']}\"" );
+			if ( $m !== $t['expectUrl'] ) {
+				echo "FAIL ***\n";
+			}
 		}
 	}
 
 	private function _init() {
+		// create a WeirdoUrl object for each parse test URL
 		foreach ( $this->parseTestSet as $name => &$item ) {
-			$item['url'] = new WeirdoUrl( $item['url'] );
+			$item['weirdUrl'] = new WeirdoUrl( $item['url'] );
 		}
 	}
 
@@ -304,14 +327,17 @@ class WeidoUrl_ut extends WeirdoCommandLineApp {
 	public static function _initStatic() {
 	}
 
+	/** For semantics, see WeirdoCommandLineApp::$_optargs */
 	protected $_optargs = null;
+
+	/** For semantics, see WeirdoCommandLineApp::$_longopts */
 	protected $_longopts = array( 'debug::' );
 
 }
 // Once-only static initialization
-WeidoUrl_ut::_initStatic();
+Weirdo_ut::_initStatic();
 
-exit ( WeidoUrl_ut::run() );
+exit ( Weirdo_ut::run() );
 
 /** @}*/
 
