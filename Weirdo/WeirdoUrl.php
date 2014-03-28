@@ -31,7 +31,6 @@ if ( !isset( $GLOBALS['gWeirdoDebug'] ) ) {
 	//$GLOBALS['gWeirdoDebug'] = 1;
 }
 
-
 class WeirdoUrl {
 
 	/** */
@@ -111,13 +110,16 @@ class WeirdoUrl {
 				);
 			}
 			$this->_parsed = self::parse( $this->_text );
+      if ( isset( $this->_parsed['scheme'] ) ) {
+        $this->_scheme = $this->_parsed['scheme'];
+      }
 		}
 		return $this->_parsed;
 	}
 
 	public function getValidity() {
 		if ( $this->_validity === null ) {
-			$this->_validity = self::evaluateValidity( $this->getParsed() );
+			$this->_validity = self::testValidity( $this->getParsed() );
 		}
 		return $this->_validity;
 	}
@@ -133,14 +135,38 @@ class WeirdoUrl {
 		if ( is_a( $urlOrParts, __CLASS__ ) ) {
 			$urlOrParts = $urlOrParts->getParsed();
 		}
-		return self::haveSameAuthority( $this->getParsed(), $urlOrParts );
+		return self::compareSameAuthority( $this->getParsed(), $urlOrParts );
 	}
 
-	public function buildMerged( $baseUrlOrParts ) {
+	public function createMerged( $baseUrlOrParts ) {
 		if ( is_a( $baseUrlOrParts, __CLASS__ ) ) {
 			$baseUrlOrParts = $baseUrlOrParts->getParsed();
 		}
-		return self::mergeUrls( $this->getParsed(), $baseUrlOrParts );
+    $merged = self::mergeUrls( $this->getParsed(), $baseUrlOrParts );
+    if ( !$merged ) {
+      return false;
+    }
+    $result = new WeirdoUrl();
+    $result = setParsed( $merged );
+	}
+
+  /** Indicate if the URL has an authority component
+   *
+   * The authority component doesn't need to be complete/valid.
+   */
+	public static function checkAuthority( $urlOrParts ) {
+    if ( !is_array( $urlOrParts ) ) {
+      $urlOrParts = self::parse( $urlOrParts );
+    }
+		if ( !$urlOrParts ) {
+			return false;
+		}
+		return
+				 isset( $urlOrParts['host'] )
+			|| isset( $urlOrParts['user'] )
+			|| isset( $urlOrParts['pass'] )
+			|| isset( $urlOrParts['port'] )
+		;
 	}
 
 	private static function __setBaseUrl( $baseUrlOrParts ) {
@@ -167,11 +193,7 @@ class WeirdoUrl {
 		if ( !$urlOrParts ) {
 			return false;
 		}
-
-		if ( !self::hasAuthority( $urlOrParts ) ) {
-			return null;
-		}
-		if ( !isset( $urlOrParts['host'] ) ) {
+		if ( !( isset( $urlOrParts['host'] ) || self::checkAuthority( $urlOrParts ) ) ) {
 			return null;
 		}
 		$authority = '';
@@ -461,21 +483,6 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 		return self::removeDotSegments( $path );
 	}
 
-	public static function hasAuthority( $urlOrParts ) {
-		if ( is_string( $urlOrParts ) ) {
-			$urlOrParts = self::parse( $urlOrParts );
-		}
-		if ( !$urlOrParts ) {
-			return false;
-		}
-		return
-				 isset( $urlOrParts['host'] )
-			|| isset( $urlOrParts['pass'] )
-			|| isset( $urlOrParts['user'] )
-			|| isset( $urlOrParts['port'] )
-		;
-	}
-
 	/**
 	 * A valid authority must have a host. If it has a password, then it must also have a user
 	 */
@@ -500,7 +507,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 		if ( !$urlOrParts2 ) {
 			return false;
 		}
-    if ( !self::haveSameAuthority( $urlOrParts1, $urlOrParts2 ) ) {
+    if ( !self::compareSameAuthority( $urlOrParts1, $urlOrParts2 ) ) {
       return false;
     }
 		foreach( array( 'scheme', 'path', 'query', 'fragment' ) as $part ) {
@@ -516,7 +523,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
     return true;
   }
  
-	public static function haveSameAuthority( $urlOrParts1, $urlOrParts2 ) {
+	public static function compareSameAuthority( $urlOrParts1, $urlOrParts2 ) {
 		$urlOrParts1 = is_string( $urlOrParts1 ) ? self::parse( $urlOrParts1 ) : $urlOrParts1;
 		if ( !$urlOrParts1 ) {
 			return false;
@@ -562,7 +569,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 			$urlOrParts['scheme'] = $baseUrlOrParts['scheme'];
 
 			// merge the authorities
-			if ( ( !self::hasAuthority( $urlOrParts ) ) || ( self::haveSameAuthority( $urlOrParts, $baseUrlOrParts ) ) ) {
+			if ( ( !self::checkAuthority( $urlOrParts ) ) || ( self::compareSameAuthority( $urlOrParts, $baseUrlOrParts ) ) ) {
 				foreach( array( 'user', 'pass', 'host', 'port' ) as $part ) {
 					if ( isset( $baseUrlOrParts[$part] ) ) {
 						$urlOrParts[$part] = $baseUrlOrParts[$part];
@@ -605,17 +612,16 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 	 * a valid relative or absolute URL.
 	 *
 	 */
-	public static function evaluateValidity( $urlOrParts ) {
-		if ( $urlOrParts === null ) {
-			$urlOrParts = self::parse( $url );
-		}
+	public static function testValidity( $urlOrParts ) {
+    if ( !is_array( $urlOrParts ) ) {
+      $urlOrParts = self::parse( $urlOrParts );
+    }
 		if ( !$urlOrParts ) {
-			// not valid if we can't parse it
 			return false;
 		}
-
+ 
 		$scheme = isset( $urlOrParts['scheme'] ) ? $urlOrParts['scheme'] : null;
-		$hasAuthority = self::hasAuthority( $urlOrParts );
+		$hasAuthority = self::checkAuthority( $urlOrParts );
 		$path = isset( $urlOrParts['path'] ) ? $urlOrParts['path'] : null;
 
 		if ( $hasAuthority && !self::hasValidAuthority( $urlOrParts ) ) {
@@ -630,10 +636,22 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 
 		return VALID_RELATIVE;
 	}
-
+  
+  private static function _getParsed( $urlOrParts ) {
+    if ( is_array( $urlOrParts ) ) {
+      return $urlOrParts;
+		} elseif ( is_a( $urlOrParts, __CLASS__ ) ) {
+      return $urlOrParts->getParsed();
+    } elseif ( is_string( $urlOrParts ) ) {
+      return self::parse( $urlOrParts );
+    }
+    return false;
+  }
+ 
 	private function _reset() {
 		$this->_text = null;
 		$this->_parsed = null;
+    $this->_scheme = null;
 		$this->_validity = null;
 		$this->_authority = null;
 	}
@@ -660,6 +678,8 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 	private $_text;
 
 	private $_parsed;
+  
+  private $_scheme;
 
 	private $_validity;
 

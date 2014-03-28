@@ -32,7 +32,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * @}
  */
- 
+
 require_once __DIR__ . "/WeirdoSingleton.php";
 
 /**
@@ -52,6 +52,7 @@ class Weirdo extends WeirdoSingleton {
 	/** See http://php.net/reserved.constants for semantics. */
 	public static $K = array(
 		'PHP_VERSION_ID'    => null,
+		'PATH_SEPARATOR'    => ':',
 		'E_USER_ERROR'      => 0x0100,
 		'E_USER_WARNING'    => 0x0200,
 		'E_USER_NOTICE'     => 0x0400,
@@ -180,23 +181,111 @@ class Weirdo extends WeirdoSingleton {
 
 		return $frame;
 	}
- 
-  /** Recursively convert an array to an object */
-  public static function objectFromArray( $array ) {
-    $o = (object) null;
-    foreach ( $array as $k => $v ) {
-      // replace null array key with a valid object field name
-      if ( $k === '' ) {
-        $k = '_null_' . __METHOD__;
-      }
-      if ( is_array( $v ) ) {
-        $o->{$k} = self::objectFromArray( $v ); // recurse on arrays
-      } else {
-        $o->{$k} = $v;
-      }
-    }
-    return $o;
-  }
+
+	/** Recursively convert an array to an object */
+	public static function objectFromArray( $array ) {
+		$o = (object) null;
+		foreach ( $array as $k => $v ) {
+			// replace null array key with a valid object field name
+			if ( $k === '' ) {
+				$k = '_null_' . __METHOD__;
+			}
+			if ( is_array( $v ) ) {
+				$o->{$k} = self::objectFromArray( $v ); // recurse on arrays
+			} else {
+				$o->{$k} = $v;
+			}
+		}
+		return $o;
+	}
+
+	public static function autoloadEnable() {
+		static $autoloadEnabled;
+		if ( $autoloadEnabled ) {
+			return $autoloadEnabled;
+		}
+		if ( self::$K['PHP_VERSION_ID'] < 50102 ) {
+			trigger_error(
+				sprintf( '%s: Can\'t autoload: capability not available in PHP versions before PHP 5.1.2' ),
+				E_USER_NOTICE
+			);
+			return false;
+		}
+		if ( !$autoloadEnabled ) {
+			foreach ( self::$_weirdoAutoloadClasses as $autoloadClass ) {
+				if ( !self::setAutoloadClassFile( $autoloadClass, __DIR__ . "/$autoloadClass.php" ) ) {
+					return false;
+				}
+			}
+			$autoloadEnabled = true;
+		}
+		return $autoloadEnabled;
+	}
+
+	/** */
+	public static function setAutoloadClassFile( $classNameOrArray, $classFile ) {
+		if ( !is_array( $classNameOrArray ) ) {
+			return self::_setAutoloadClassFile( $classNameOrArray, $classFile );
+		}
+		/* else */
+		foreach ( $classNameOrArray as $className ) {
+			if ( !self::_setAutoloadClassFile( $className, $classFile ) ) {
+				return false;
+			}
+		}
+	}
+
+	/** */
+	public static function _autoloader( $className ) {
+		$className = strtolower( $className );
+		if ( isset( self::$_autoloadFiles[$className] ) ) {
+			include self::$_autoloadFiles[$className];
+		}
+	}
+
+	/** */
+	public function stream_resolve_include_path( $filename ) {
+		static $usePhpFunction = null;
+		if ( $usePhpFunction === null ) {
+			$usePhpFunction = self::$K['PHP_VERSION_ID'] >= 50302;
+		}
+		if ( $usePhpFunction ) {
+			return stream_resolve_include_path( $filename );
+		}
+		/* else */
+		foreach ( explode( self::$K['PATH_SEPARATOR'], get_include_path() ) as $path ) {
+			$fullPath = "$path/$filename";
+			var_dump($fullPath);
+			if ( is_file( $fullPath ) ) {
+				return realpath( $fullPath );
+			}
+		}
+		return false;
+	}
+
+	/** */
+	private static function _setAutoloadClassFile( $className, $classFile ) {
+		static $autoloadEnabled;
+		$lcClassName = strtolower( $className );
+		$fullPath = self::stream_resolve_include_path( $classFile );
+		if ( !$fullPath ) {
+			// there's no file by that name
+			return false;
+		}
+		// see if a mapping already exists
+		if ( isset( self::$_autoloadFiles[$lcClassName] ) ) {
+			// ignore if this new mapping is identical to the current mapping
+			if ( self::$_autoloadFiles[$lcClassName] === $fullPath ) {
+				// mapping already exists
+				return true;
+			}
+		}
+		if ( !$autoloadEnabled ) {
+			$autoloadEnabled = spl_autoload_register( __CLASS__ . '::_autoloader', false );
+		}
+		self::$_autoloadFiles[$lcClassName] = $fullPath;
+		return true;
+	}
 
 	/**
 	 * Initialize this class's static properties.
@@ -216,7 +305,16 @@ class Weirdo extends WeirdoSingleton {
 				self::$K['PHP_VERSION_ID'] = (int) vsprintf( '%u%02u%02u', explode( '.', phpversion() ) );
 			}
 			if ( self::$K['PHP_VERSION_ID'] < 40400 ) {
-				trigger_error( 'The ' . __CLASS__ . ' class is not supported for PHP verions earlier than PHP 4.4.', E_USER_WARNING );
+				trigger_error( 'The ' . __CLASS__ . ' class is not fully supported for PHP verions earlier than PHP 4.4.', E_USER_WARNING );
+			}
+
+
+			self::$K['WEIRDO_IS_WINDOWS'] = strtoupper( substr( PHP_OS, 0, 3) ) === 'WIN';
+
+			if ( defined( 'PATH_SEPARATOR' ) ) {
+				self::$K['PATH_SEPARATOR'] = PATH_SEPARATOR;
+			} elseif ( self::$K['WEIRDO_IS_WINDOWS'] ) {
+				self::$K['PATH_SEPARATOR'] = self::$K['WEIRDO_IS_WINDOWS'] ? ';' : ':';
 			}
 
 			self::$_backtraceHasLimit = ( self::$K['PHP_VERSION_ID'] >= 50400 );
@@ -246,8 +344,22 @@ class Weirdo extends WeirdoSingleton {
 	/** */
 	private static $_backtraceHasLimit;
 
+	private static $_autoloadFiles = array();
+
+	private static $_weirdoAutoloadClasses = array(
+		'WeirdoCommandLineApp',
+		'WeirdoGetterSetter',
+		'WeirdoUrl',
+	);
+
 }
+
 // Once-only invocation to initialize static properties
 Weirdo::_initStatic();
+
+// Enable autoloader (if available)
+if ( Weirdo::$K['PHP_VERSION_ID'] >= 50102 ) {
+	Weirdo::autoloadEnable();
+}
 
 /** @}*/

@@ -25,8 +25,7 @@
  * @}
  */
 
-require_once __DIR__ . "/../WeirdoCommandLineApp.php";
-require_once __DIR__ . "/../WeirdoUrl.php";
+require_once __DIR__ . "/../Weirdo.php";
 
 /**
  * Perform unit test for Weirdo module.

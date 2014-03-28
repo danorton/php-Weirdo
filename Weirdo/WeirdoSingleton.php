@@ -40,7 +40,15 @@ abstract class WeirdoSingleton {
 	 */
 	public function __construct() {
 		if ( self::$_self || !self::$_singleton ) {
-			throw new ErrorException( 'Invalid attempt to instantiate static/singleton class ' . get_class($this) . '.' );
+      $msg = 'Invalid attempt to instantiate static/singleton class ' . get_class($this) . '.';
+      $phpVersion = (int) vsprintf( '%u%02u%02u', explode( '.', phpversion() ) );
+      if ( $phpVersion >= 50100 ) {
+        throw new ErrorException( $msg );
+      } else {
+        trigger_error( $msg, E_USER_ERROR );
+      }
+      // will never reach here
+      exit(1);
 		}
 	}
 
