@@ -162,7 +162,7 @@ class WeirdoUrl {
 	 */
 	public static function extractAuthority( $urlOrParts ) {
 		if ( is_string( $urlOrParts ) ) {
-			$urlOrParts = Weirdo::parse( $urlOrParts );
+			$urlOrParts = self::parse( $urlOrParts );
 		}
 		if ( !$urlOrParts ) {
 			return false;
@@ -463,7 +463,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 
 	public static function hasAuthority( $urlOrParts ) {
 		if ( is_string( $urlOrParts ) ) {
-			$urlOrParts = Weirdo::parse( $urlOrParts );
+			$urlOrParts = self::parse( $urlOrParts );
 		}
 		if ( !$urlOrParts ) {
 			return false;
@@ -481,7 +481,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 	 */
 	public static function hasValidAuthority( $urlOrParts ) {
 		if ( is_string( $urlOrParts ) ) {
-			$urlOrParts = Weirdo::parse( $urlOrParts );
+			$urlOrParts = self::parse( $urlOrParts );
 		}
 		if ( !$urlOrParts ) {
 			return false;
@@ -491,12 +491,37 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 			&& ( ( !isset( $urlOrParts['pass'] ) ) || ( isset( $urlOrParts['user'] ) ) );
 	}
 
-	public static function haveSameAuthority( $urlOrParts1, $urlOrParts2 ) {
-		$urlOrParts1 = is_string( $urlOrParts1 ) ? Weirdo::parse( $urlOrParts1 ) : $urlOrParts1;
+	public static function equalParsed( $urlOrParts1, $urlOrParts2 ) {
+		$urlOrParts1 = is_string( $urlOrParts1 ) ? self::parse( $urlOrParts1 ) : $urlOrParts1;
 		if ( !$urlOrParts1 ) {
 			return false;
 		}
-		$urlOrParts2 = is_string( $urlOrParts2 ) ? Weirdo::parse( $urlOrParts2 ) : $urlOrParts2;
+		$urlOrParts2 = is_string( $urlOrParts2 ) ? self::parse( $urlOrParts2 ) : $urlOrParts2;
+		if ( !$urlOrParts2 ) {
+			return false;
+		}
+    if ( !self::haveSameAuthority( $urlOrParts1, $urlOrParts2 ) ) {
+      return false;
+    }
+		foreach( array( 'scheme', 'path', 'query', 'fragment' ) as $part ) {
+			// both are defined or both are undefined
+			if ( isset( $urlOrParts1[$part] ) !== isset( $urlOrParts2[$part] ) ) {
+				return false;
+			}
+			// if defined, they have identical values
+			if ( isset( $urlOrParts1[$part] ) && ( $urlOrParts1[$part] !== $urlOrParts2[$part] ) ) {
+				return false;
+			}
+		}
+    return true;
+  }
+ 
+	public static function haveSameAuthority( $urlOrParts1, $urlOrParts2 ) {
+		$urlOrParts1 = is_string( $urlOrParts1 ) ? self::parse( $urlOrParts1 ) : $urlOrParts1;
+		if ( !$urlOrParts1 ) {
+			return false;
+		}
+		$urlOrParts2 = is_string( $urlOrParts2 ) ? self::parse( $urlOrParts2 ) : $urlOrParts2;
 		if ( !$urlOrParts2 ) {
 			return false;
 		}
@@ -519,14 +544,14 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 	public static function mergeUrls( $urlOrParts, $baseUrlOrParts ) {
 $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__, $urlOrParts);
 		if ( is_string( $urlOrParts ) ) {
-			$urlOrParts = WeirdoUrl::parse( $urlOrParts );
+			$urlOrParts = self::parse( $urlOrParts );
 		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
 
 		if ( is_string( $baseUrlOrParts ) ) {
-			$baseUrlOrParts = WeirdoUrl::parse( $baseUrlOrParts );
+			$baseUrlOrParts = self::parse( $baseUrlOrParts );
 		}
 		if ( !$baseUrlOrParts ) {
 			return false;
