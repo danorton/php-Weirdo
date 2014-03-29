@@ -110,9 +110,9 @@ class WeirdoUrl {
 				);
 			}
 			$this->_parsed = self::parse( $this->_text );
-      if ( isset( $this->_parsed['scheme'] ) ) {
-        $this->_scheme = $this->_parsed['scheme'];
-      }
+			if ( isset( $this->_parsed['scheme'] ) ) {
+				$this->_scheme = $this->_parsed['scheme'];
+			}
 		}
 		return $this->_parsed;
 	}
@@ -142,22 +142,22 @@ class WeirdoUrl {
 		if ( is_a( $baseUrlOrParts, __CLASS__ ) ) {
 			$baseUrlOrParts = $baseUrlOrParts->getParsed();
 		}
-    $merged = self::mergeUrls( $this->getParsed(), $baseUrlOrParts );
-    if ( !$merged ) {
-      return false;
-    }
-    $result = new WeirdoUrl();
-    $result = setParsed( $merged );
+		$merged = self::mergeUrls( $this->getParsed(), $baseUrlOrParts );
+		if ( !$merged ) {
+			return false;
+		}
+		$result = new WeirdoUrl();
+		$result = setParsed( $merged );
 	}
 
-  /** Indicate if the URL has an authority component
-   *
-   * The authority component doesn't need to be complete/valid.
-   */
+	/** Indicate if the URL has an authority component
+	 *
+	 * The authority component doesn't need to be complete/valid.
+	 */
 	public static function checkAuthority( $urlOrParts ) {
-    if ( !is_array( $urlOrParts ) ) {
-      $urlOrParts = self::parse( $urlOrParts );
-    }
+		if ( !is_array( $urlOrParts ) ) {
+			$urlOrParts = self::parse( $urlOrParts );
+		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
@@ -359,7 +359,7 @@ class WeirdoUrl {
 		if ( !strlen( $urlPath ) ) {
 			return $urlPath;  // degenerate case
 		}
-$GLOBALS['gWeirdoDebug'] && printf("%4u start=\"%s\"\n", __LINE__, $urlPath );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u start=\"%s\"\n", __LINE__, $urlPath );
 		$addTail = false;
 		$input = array_reverse( explode( '/', $urlPath ) );
 		if ( $urlPath[0] === '/' ) {
@@ -426,10 +426,10 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u POP! %u \"%s\"\n", __LINE__, count( $in
 				}
 			}
 $GLOBALS['gWeirdoDebug'] && printf( "%4u ** produces (\"%s\")\n", __LINE__, implode( '","', $output ) );
-$GLOBALS['gWeirdoDebug'] && printf( "%4u   ** keys: (\"%s\")\n", __LINE__, implode( '","', array_keys($output) ) );
+$GLOBALS['gWeirdoDebug'] && printf( "%4u   ** keys: (\"%s\")\n", __LINE__, implode( '","', array_keys( $output ) ) );
 		}
 		while ( ( count( $output ) > 0 ) && ( $output[count( $output ) - 1] === '.' ) ) {
-			if (0|| $absPrefix || ( count( $output ) > 1 ) ) {
+			if ( $absPrefix || ( count( $output ) > 1 ) ) {
 $GLOBALS['gWeirdoDebug'] && printf( "%4u POP-A-DOT!\n", __LINE__ );
 				$topOut = array_pop( $output ); //$output[count( $output ) - 1] = '';
 $GLOBALS['gWeirdoDebug'] && printf( "%4u POP! \"%s\"\n", __LINE__, $topOut );
@@ -444,7 +444,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u LAST-IS-DOT!\n", __LINE__ );
 			$addTail = false;
 		}
 		$result = $absPrefix . implode( '/', $output ) . ( $addTail ? '/' : '' );
-$GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
+$GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result );
 		return $result;
 	}
 
@@ -507,9 +507,9 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 		if ( !$urlOrParts2 ) {
 			return false;
 		}
-    if ( !self::compareSameAuthority( $urlOrParts1, $urlOrParts2 ) ) {
-      return false;
-    }
+		if ( !self::compareSameAuthority( $urlOrParts1, $urlOrParts2 ) ) {
+			return false;
+		}
 		foreach( array( 'scheme', 'path', 'query', 'fragment' ) as $part ) {
 			// both are defined or both are undefined
 			if ( isset( $urlOrParts1[$part] ) !== isset( $urlOrParts2[$part] ) ) {
@@ -520,9 +520,9 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 				return false;
 			}
 		}
-    return true;
-  }
- 
+		return true;
+	}
+
 	public static function compareSameAuthority( $urlOrParts1, $urlOrParts2 ) {
 		$urlOrParts1 = is_string( $urlOrParts1 ) ? self::parse( $urlOrParts1 ) : $urlOrParts1;
 		if ( !$urlOrParts1 ) {
@@ -549,7 +549,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u result=\"%s\"\n", __LINE__, $result);
 	 * Get fully qualified URL parts from the given (possibly relative) URL.
 	 */
 	public static function mergeUrls( $urlOrParts, $baseUrlOrParts ) {
-$GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__, $urlOrParts);
+$GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__, $urlOrParts );
 		if ( is_string( $urlOrParts ) ) {
 			$urlOrParts = self::parse( $urlOrParts );
 		}
@@ -613,13 +613,13 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 	 *
 	 */
 	public static function testValidity( $urlOrParts ) {
-    if ( !is_array( $urlOrParts ) ) {
-      $urlOrParts = self::parse( $urlOrParts );
-    }
+		if ( !is_array( $urlOrParts ) ) {
+			$urlOrParts = self::parse( $urlOrParts );
+		}
 		if ( !$urlOrParts ) {
 			return false;
 		}
- 
+
 		$scheme = isset( $urlOrParts['scheme'] ) ? $urlOrParts['scheme'] : null;
 		$hasAuthority = self::checkAuthority( $urlOrParts );
 		$path = isset( $urlOrParts['path'] ) ? $urlOrParts['path'] : null;
@@ -636,22 +636,22 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 
 		return VALID_RELATIVE;
 	}
-  
-  private static function _getParsed( $urlOrParts ) {
-    if ( is_array( $urlOrParts ) ) {
-      return $urlOrParts;
+
+	private static function _getParsed( $urlOrParts ) {
+		if ( is_array( $urlOrParts ) ) {
+			return $urlOrParts;
 		} elseif ( is_a( $urlOrParts, __CLASS__ ) ) {
-      return $urlOrParts->getParsed();
-    } elseif ( is_string( $urlOrParts ) ) {
-      return self::parse( $urlOrParts );
-    }
-    return false;
-  }
- 
-	private function _reset() {
+			return $urlOrParts->getParsed();
+		} elseif ( is_string( $urlOrParts ) ) {
+			return self::parse( $urlOrParts );
+		}
+		return false;
+	}
+
+	protected function _reset() {
 		$this->_text = null;
 		$this->_parsed = null;
-    $this->_scheme = null;
+		$this->_scheme = null;
 		$this->_validity = null;
 		$this->_authority = null;
 	}
@@ -669,8 +669,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 	public static function _initStatic() {
 		throw new ErrorException( 'Error: Attempt to invoke private method ' . __METHOD__ . '().' );
 		if ( !isset( self::$_staticInitComplete ) ) {
-		}
-		else {
+		} else {
 			throw new ErrorException( 'Error: Attempt to invoke private method ' . __METHOD__ . '().' );
 		}
 	}
@@ -678,8 +677,8 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 	private $_text;
 
 	private $_parsed;
-  
-  private $_scheme;
+
+	private $_scheme;
 
 	private $_validity;
 
