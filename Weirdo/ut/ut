@@ -260,9 +260,8 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 
 			// validate the basic URL parser
 			if ( !WeirdoUrl::equalParsed( $item['weirdUrl']->getParsed(), $item['parsed'] ) ) {
-				printf( "===== parse failure\n" );
-				printf( " name: %s\n", $name );
-				printf( "  url: %s\n", $item['url'] );
+				$this->failcount++;
+				printf( "ERROR parse name=%s; url=\"%s\"\n", $name, $item['url'] );
 				printf( " got: " );
 				var_dump( $item['weirdUrl']->getParsed() );
 				printf( "expected: " );
@@ -275,17 +274,14 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 				? $item['unparsed']
 				: $item['url'];
 			if ( $urlRebuilt !== $expectedRebuilt ) {
-				printf( "===== unparse failure\n" );
-				printf( " name: %s\n", $name );
-				printf( " orig: \"%s\"\n", $item['url'] );
-				printf( "built: \"%s\"\n", $urlRebuilt );
-				var_dump( $item['parsed'] );
+				$this->failcount++;
+				printf( "ERROR unparse name=%s; \"%s\" != \"%s\"\n", $name, $expectedRebuilt, $urlRebuilt );
 			}
 		}
 
 		// validate the merge functions (also tests path merge and dot removal)
-		echo "===========================\n";
-		printf( "merge_base=\n  \"%s\"\n", $this->parseTestSet['merge_base']['weirdUrl'] );
+		// echo "===========================\n";
+		// printf( "merge_base=\n  \"%s\"\n", $this->parseTestSet['merge_base']['weirdUrl'] );
 
 		foreach( $this->mergeTestSet as $t ) {
 			// skip "strict" items, as we parse in compatibility mode
@@ -299,11 +295,20 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 				);
 			// get the text URL that results
 			$m = WeirdoUrl::unparse( $f );
-			printf( "%u %-12s =  %-23s %s\n", $m == $t['expectUrl'], "\"{$t['refUrl']}\"", '"' . WeirdoUrl::unparse( $f ) . '"', "\"{$t['expectUrl']}\"" );
 			if ( $m !== $t['expectUrl'] ) {
-				echo "FAIL ***\n";
+				$this->failcount++;
+				printf( "ERROR merge %-12s =  %-23s %s\n", "\"{$t['refUrl']}\"", '"' . WeirdoUrl::unparse( $f ) . '"', "\"{$t['expectUrl']}\"" );
 			}
 		}
+
+		if ( $this->failcount == 0 ) {
+			printf( "PASS\n" );
+			return 0;
+		} else {
+			printf( "FAIL - %u errors\n", $this->failcount );
+			return 1;
+		}
+
 	}
 
 	private function _init() {
@@ -331,6 +336,8 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 
 	/** For semantics, see WeirdoCommandLineApp::$_longopts */
 	protected $_longopts = array( 'debug::' );
+
+	public $failcount = 0;
 
 }
 // Once-only static initialization
