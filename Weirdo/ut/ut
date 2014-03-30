@@ -62,6 +62,23 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 		'merge_base'   => array(
 			 'url' => 'http://a/b/c/d;p?q',
 			 'parsed' => array( 'scheme' => 'http', 'host' => 'a', 'path' => '/b/c/d;p', 'query' => 'q' ),
+			 'query' => array( 'q' => true ),
+		),
+		'odd_query'   => array(
+			'url' => "https://a/b/c/g?y/./x",
+			'parsed' => array( 'scheme' => 'https', 'host' => 'a', 'path' => '/b/c/g', 'query' => 'y/./x' ),
+			'query' => array( 'y/./x' => true ),
+		),
+		'query_mc_mq'   => array(
+			'url' => "HTTPS://USER:Pass@A:99/b/c/g?y/./x&arg2=55",
+			'parsed' => array( 'scheme' => 'https', 'user' => 'USER', 'pass' => 'Pass', 'host' => 'a',
+				'port' => 99, 'path' => '/b/c/g', 'query' => 'y/./x&arg2=55'),
+			'query' => array( 'y/./x' => true, 'arg2' => '55' ),
+			'unparsed' => 'https://USER:Pass@a:99/b/c/g?y/./x&arg2=55',
+		),
+		'email' => array(
+			'url' => 'mailto:nobody@example.com',
+			'parsed' => array( 'scheme' => 'mailto', 'path' => 'nobody@example.com', ),
 		),
 	);
 
@@ -94,10 +111,12 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 		array(
 			'refUrl' => "?y",
 			'expectUrl' => "http://a/b/c/d;p?y",
+			'query' => array( 'y' => true ),
 		),
 		array(
 			'refUrl' => "g?y",
 			'expectUrl' => "http://a/b/c/g?y",
+			'query' => array( 'y' => true ),
 		),
 //*///
 		array(
@@ -111,6 +130,7 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 		array(
 			'refUrl' => "g?y#s",
 			'expectUrl' => "http://a/b/c/g?y#s",
+			'query' => array( 'y' => true ),
 		),
 		array(
 			'refUrl' => ";x",
@@ -123,11 +143,13 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 		array(
 			'refUrl' => "g;x?y#s",
 			'expectUrl' => "http://a/b/c/g;x?y#s",
+			'query' => array( 'y' => true ),
 		),
 //*///
 		array(
 			'refUrl' => "",
 			'expectUrl' => "http://a/b/c/d;p?q",
+			'query' => array( 'q' => true ),
 		),
 //*///
 		array(
@@ -221,10 +243,12 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 		array(
 			'refUrl' => "g?y/./x",
 			'expectUrl' => "http://a/b/c/g?y/./x",
+			'query' => array( 'y/./x' => true ),
 		),
 		array(
 			'refUrl' => "g?y/../x",
 			'expectUrl' => "http://a/b/c/g?y/../x",
+			'query' => array( 'y/../x' => true ),
 		),
 		array(
 			'refUrl' => "g#s/./x",
@@ -267,6 +291,10 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 				printf( "expected: " );
 				var_dump( $item['parsed'] );
 			}
+
+			// validate the query parser
+			$expectedQuery = isset( $item['query'] ) ? $item['query'] : array();
+			$this->_equalArrays( $item['url'], $item['weirdUrl']->getQuery(), $expectedQuery );
 
 			// validate the unparser
 			$urlRebuilt = WeirdoUrl::unparse( $item['weirdUrl']->getParsed() );
@@ -316,6 +344,32 @@ class Weirdo_ut extends WeirdoCommandLineApp {
 		foreach ( $this->parseTestSet as $name => &$item ) {
 			$item['weirdUrl'] = new WeirdoUrl( $item['url'] );
 		}
+	}
+
+	private function _equalArrays( $url, $haveArray, $expectedArray ) {
+		$errors = 0;
+		foreach ( $expectedArray as $k => $v ) {
+			if ( !isset( $haveArray[$k] ) ) {
+				printf( "ERROR query url=\"%s\"; missing name=\"%s\"\n", $url, $k );
+				$errors++;
+			} elseif ( $v !== $haveArray[$k] ) {
+				printf( "ERROR query url=\"%s\"; unmatched value; name=\"%s\"; got=\"%s\"; expected=\"%s\"\n",
+					$url,
+					$k,
+					$haveArray[$k],
+					$expectedArray[$k]
+				);
+				$errors++;
+				unset( $haveArray[$k] );
+			} else {
+				unset( $haveArray[$k] );
+			}
+		}
+		foreach ( $haveArray as $k => $v ) {
+			printf( "ERROR query url=\"%s\"; extra name=\"%s\"\n", $url, $k );
+			$errors++;
+		}
+		$this->failcount += $errors;
 	}
 
 	/**
