@@ -50,9 +50,13 @@ class WeirdoUrl {
 	/** Class constructor.
 	 *
 	 */
-	public function __construct( $urlText = null ) {
-		if ( $urlText !== null ) {
-			$this->setText( $urlText );
+	public function __construct( $urlOrParts = null ) {
+		if ( $urlOrParts !== null ) {
+			if ( is_array( $urlOrParts ) ) {
+				$this->setParsed( $urlOrParts );
+			} else {
+				$this->setText( $urlOrParts );
+			}
 		}
 	}
 
@@ -92,12 +96,10 @@ class WeirdoUrl {
 		if ( is_array( $parsed ) ) {
 			$this->_parsed = $parsed;
 		} else {
-			if ( $parsed !== null ) {
-				trigger_error(
-					sprintf( '%s: invalid parameter', __METHOD__ ),
-					E_USER_WARNING
-				);
-			}
+			trigger_error(
+				sprintf( '%s: invalid parameter', __METHOD__ ),
+				E_USER_WARNING
+			);
 		}
 	}
 
@@ -131,6 +133,31 @@ class WeirdoUrl {
 		return $this->_authority;
 	}
 
+	public function setQueryInputSeparators( $queryInputSeparators ) {
+		$this->_queryInputSeparators = $queryInputSeparators;
+	}
+
+	public function getQueryInputSeparators() {
+		if ( $this->_queryInputSeparators === null ) {
+			$this->_queryInputSeparators = ini_get( 'arg_separator.input' );
+			if ( $this->_queryInputSeparators == '' ) {
+				$this->_queryInputSeparators = '&';
+			}
+		}
+		return $this->_queryInputSeparators;
+	}
+
+	public function getQuery( $queryInputSeparators = null ) {
+		if ( $this->_query === null ) {
+			$this->_query = array();
+			$parsed = $this->getParsed();
+			if ( isset( $parsed['query'] ) ) {
+				$this->_query = self::parseQuery( $parsed['query'], $this->getQueryInputSeparators() );
+			}
+		}
+		return $this->_query;
+	}
+
 	public function hasSameAuthority( $urlOrParts ) {
 		if ( is_a( $urlOrParts, __CLASS__ ) ) {
 			$urlOrParts = $urlOrParts->getParsed();
@@ -148,6 +175,41 @@ class WeirdoUrl {
 		}
 		$result = new WeirdoUrl();
 		$result = setParsed( $merged );
+	}
+
+	public static function parseQuery( $queryString, $queryInputSeparators = null ) {
+		if ( $queryString == '' ) {
+			return false;
+		}
+		if ( $queryInputSeparators === null ) {
+			$queryInputSeparators = ini_get( 'arg_separator.input' );
+		}
+		if ( $queryString[0] === '?' ) {
+			$queryString = substr( $queryString, 1 );
+		}
+		$result = array();
+		while ( strlen( $queryString ) ) {
+			$sepPos = strcspn( $queryString, $queryInputSeparators );
+			$queryPart = substr( $queryString, 0, $sepPos );
+			$queryString = substr( $queryString, $sepPos + 1 );
+
+			$nameValue = explode( '=', $queryPart, 2 );
+			$name = rawurldecode( $nameValue[0] );
+			if ( count( $nameValue ) == 2 ) {
+				$value = rawurldecode( $nameValue[1] );
+			} else {
+				$value = true ;
+			}
+			if ( isset( $result[$name] ) ) {
+				if ( !is_array( $result[$name] ) ) {
+					$result[$name] = array( $result[$name] );
+				}
+				$result[$name][] = $value;
+			} else {
+				$result[$name] = $value;
+			}
+		}
+		return $result;
 	}
 
 	/** Indicate if the URL has an authority component
@@ -652,8 +714,10 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 		$this->_text = null;
 		$this->_parsed = null;
 		$this->_scheme = null;
+		$this->_query = null;
 		$this->_validity = null;
 		$this->_authority = null;
+		$this->_queryInputSeparators = null;
 	}
 
 	/**
@@ -680,11 +744,15 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 
 	private $_scheme;
 
+	private $_query;
+
 	private $_validity;
 
 	private $_authority;
 
 	private $_baseUrl;
+
+	private $_queryInputSeparators;
 
 }
 // Once-only static initialization
