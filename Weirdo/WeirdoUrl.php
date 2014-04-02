@@ -47,6 +47,9 @@ class WeirdoUrl {
 		'ssh'    => array( 'port' =>  22, 'pathType' => '/' ),
 	);
 
+	/** */
+	public static $urlSafeChars = '!$()*,/:;@';
+
 	/** Class constructor.
 	 *
 	 */
@@ -75,7 +78,7 @@ class WeirdoUrl {
 	}
 
 	public function getText() {
-		if ( ( $this->_text === null ) ) {
+		if ( $this->_text === null ) {
 			if ( $this->_parsed === null ) {
 				trigger_error(
 					sprintf( '%s: reference to uninitialized value', __METHOD__ ),
@@ -85,6 +88,19 @@ class WeirdoUrl {
 			$this->_text = self::unparse( $this->_parsed );
 		}
 		return $this->_text;
+	}
+
+	public function getLocalText() {
+		if ( $this->_localText === null ) {
+			$parsed = $this->getParsed();
+			unset( $parsed['scheme'] );
+			unset( $parsed['user'] );
+			unset( $parsed['pass'] );
+			unset( $parsed['host'] );
+			unset( $parsed['port'] );
+			$this->_localText = self::unparse( $parsed );
+		}
+		return $this->_localText;
 	}
 
 	public function __toString() {
@@ -128,7 +144,10 @@ class WeirdoUrl {
 
 	public function getAuthority() {
 		if ( $this->_authority === null ) {
-			$this->_authority = self::extractAuthority( $this->getParsed() );
+			$this->_authority = false;
+			if ( $this->hasAuthority() ) {
+				$this->_authority = self::extractAuthority( $this->getParsed() );
+			}
 		}
 		return $this->_authority;
 	}
@@ -158,6 +177,13 @@ class WeirdoUrl {
 		return $this->_query;
 	}
 
+	public function hasAuthority() {
+		if ( $this->_hasAuthority === null ) {
+			$this->_hasAuthority = self::checkAuthority( $this->getParsed() );
+		}
+		return $this->_hasAuthority;
+	}
+
 	public function hasSameAuthority( $urlOrParts ) {
 		if ( is_a( $urlOrParts, __CLASS__ ) ) {
 			$urlOrParts = $urlOrParts->getParsed();
@@ -173,8 +199,7 @@ class WeirdoUrl {
 		if ( !$merged ) {
 			return false;
 		}
-		$result = new WeirdoUrl();
-		$result = setParsed( $merged );
+		return new self( $merged );
 	}
 
 	public static function parseQuery( $queryString, $queryInputSeparators = null ) {
@@ -231,16 +256,21 @@ class WeirdoUrl {
 		;
 	}
 
-	private static function __setBaseUrl( $baseUrlOrParts ) {
-		if ( is_string( $baseUrlOrParts ) ) {
-			$baseUrlOrParts = self::parse( $baseUrlOrParts );
-		}
-		if ( !$baseUrlOrParts ) {
-			throw new ErrorException(
-				sprintf( '%s: Invalid parameter', __METHOD__ )
+	/**
+	 * Make a URL component safe, by encoding.
+	 *
+	 * Like rawurlencode, but not as aggressive.
+	 */
+	public static function encodeUrlComponent( $str ) {
+		static $okCharsArray = null;
+		if ( $okCharsArray === null ) {
+			$okChars = self::$urlSafeChars;
+			$okCharsArray = array_combine(
+				str_split( rawurlencode( $okChars ), 3 ),
+				str_split( $okChars )
 			);
 		}
-		$this->baseUrlParts = $baseUrlOrParts;
+		return strtr( rawurlencode( $str ), $okCharsArray );
 	}
 
 	/**
@@ -696,10 +726,10 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 			return self::VALID_ABSOLUTE;
 		}
 
-		return VALID_RELATIVE;
+		return self::VALID_RELATIVE;
 	}
 
-	private static function _getParsed( $urlOrParts ) {
+	protected static function _getParsed( $urlOrParts ) {
 		if ( is_array( $urlOrParts ) ) {
 			return $urlOrParts;
 		} elseif ( is_a( $urlOrParts, __CLASS__ ) ) {
@@ -712,6 +742,7 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 
 	protected function _reset() {
 		$this->_text = null;
+		$this->_localText = null;
 		$this->_parsed = null;
 		$this->_scheme = null;
 		$this->_query = null;
@@ -738,21 +769,23 @@ $GLOBALS['gWeirdoDebug'] && printf( "%4u %s url=\"%s\"\n", __LINE__, __METHOD__,
 		}
 	}
 
-	private $_text;
+	protected $_text;
 
-	private $_parsed;
+	protected $_localText;
 
-	private $_scheme;
+	protected $_parsed;
 
-	private $_query;
+	protected $_scheme;
 
-	private $_validity;
+	protected $_query;
 
-	private $_authority;
+	protected $_validity;
 
-	private $_baseUrl;
+	protected $_authority;
 
-	private $_queryInputSeparators;
+	protected $_hasAuthority;
+
+	protected $_queryInputSeparators;
 
 }
 // Once-only static initialization
