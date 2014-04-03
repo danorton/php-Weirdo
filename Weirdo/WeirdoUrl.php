@@ -171,10 +171,23 @@ class WeirdoUrl {
 			$this->_query = array();
 			$parsed = $this->getParsed();
 			if ( isset( $parsed['query'] ) ) {
-				$this->_query = self::parseQuery( $parsed['query'], $this->getQueryInputSeparators() );
+				if ( $queryInputSeparators === null ) {
+					$queryInputSeparators = $this->getQueryInputSeparators();
+				}
+				$this->_query = self::parseQuery( $parsed['query'], $queryInputSeparators );
 			}
 		}
 		return $this->_query;
+	}
+
+	public function getQueryValue( $name ) {
+		if ( isset( $this->_query[$name] ) ) {
+			return $this->_query[$name];
+		}
+		if ( !isset( $this->_query ) ) {
+			$this->getQuery();
+		}
+		return isset( $this->_query[$name] ) ? $this->_query[$name] : null;
 	}
 
 	public function hasAuthority() {
