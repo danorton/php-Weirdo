@@ -54,6 +54,10 @@ class WeirdoUrl {
 	 *
 	 */
 	public function __construct( $urlOrParts = null ) {
+		$this->init( $urlOrParts );
+	}
+
+	public function init( $urlOrParts ) {
 		if ( $urlOrParts !== null ) {
 			if ( is_array( $urlOrParts ) ) {
 				$this->setParsed( $urlOrParts );
